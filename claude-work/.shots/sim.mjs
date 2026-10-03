@@ -1,0 +1,783 @@
+
+
+
+
+/* =====================================================================
+   HOUSE CORE — house-plan.html 과 동일한 설계안 데이터 + 3D 빌더 사본
+   ===================================================================== */
+const STORE_KEY = 'cheongyong724.house.v1';
+const CATALOG = {
+  sofa:    { name:'3인 소파',     w:2000, d:850,  h:800,  color:'#7d8c99', icon:'sofa',   back:true,  kind:'sofa' },
+  armchair:{ name:'1인 체어',     w:800,  d:800,  h:780,  color:'#b07a52', icon:'sofa',   back:true,  kind:'sofa' },
+  tv:      { name:'TV 거실장',    w:1600, d:400,  h:480,  color:'#6b5543', icon:'tv',     back:true,  kind:'tv' },
+  dining:  { name:'식탁',         w:1100, d:700,  h:740,  color:'#b8875a', icon:'table',  back:false, kind:'table' },
+  chair:   { name:'의자',         w:450,  d:480,  h:820,  color:'#3e4247', icon:'chair',  back:true,  kind:'chair' },
+  counter: { name:'주방 싱크대',  w:2100, d:600,  h:850,  color:'#e6e1d8', icon:'counter',back:true,  kind:'counter' },
+  fridge:  { name:'냉장고',       w:700,  d:720,  h:1800, color:'#d6dade', icon:'box',    back:true,  kind:'box' },
+  bedQ:    { name:'퀸 침대',      w:1500, d:2050, h:450,  color:'#e8e1d2', icon:'bed',    back:true,  kind:'bed' },
+  bedSS:   { name:'슈퍼싱글 침대',w:1100, d:2000, h:420,  color:'#dfe6e3', icon:'bed',    back:true,  kind:'bed' },
+  wardrobe:{ name:'옷장',         w:1200, d:600,  h:2100, color:'#efe9df', icon:'wardrobe',back:true, kind:'box' },
+  desk:    { name:'책상',         w:1000, d:500,  h:720,  color:'#c9a77c', icon:'table',  back:true,  kind:'table' },
+  shelf:   { name:'수납장',       w:800,  d:350,  h:1200, color:'#a8835e', icon:'box',    back:true,  kind:'box' },
+  shoe:    { name:'신발장',       w:600,  d:350,  h:1100, color:'#d8d0c2', icon:'box',    back:true,  kind:'box' },
+  toilet:  { name:'양변기',       w:400,  d:680,  h:760,  color:'#f4f4f2', icon:'toilet', back:true,  kind:'toilet' },
+  basin:   { name:'세면대',       w:550,  d:450,  h:850,  color:'#f4f4f2', icon:'basin',  back:true,  kind:'basin' },
+  shower:  { name:'샤워부스',     w:900,  d:900,  h:2000, color:'#cfe3ec', icon:'shower', back:false, kind:'shower' },
+  washer:  { name:'세탁기',       w:600,  d:650,  h:850,  color:'#e9ecef', icon:'washer', back:true,  kind:'washer' },
+  boiler:  { name:'보일러',       w:450,  d:350,  h:700,  color:'#d9d4c8', icon:'box',    back:true,  kind:'box' },
+  rug:     { name:'러그',         w:1600, d:1200, h:12,   color:'#c9b9a0', icon:'rug',    back:false, kind:'rug' },
+  plant:   { name:'화분',         w:420,  d:420,  h:1100, color:'#5f8a55', icon:'plant',  back:false, kind:'plant' }
+};
+function defaultState(){
+  const ext = (id,x1,y1,x2,y2)=>({id,x1,y1,x2,y2,t:200,type:'bearing',ext:true});
+  const F = (id,type,floor,x,y,rot,extra={})=>{ const c=CATALOG[type]; return Object.assign({id,type,floor,x,y,rot,w:c.w,d:c.d,h:c.h},extra); };
+  return {
+    v:1,
+    meta:{ W:8000, D:4500, gridX:[100,2700,4900,7900], gridY:[100,4400],
+      floorH:2500, ceil1:2400, eave:4100, ridge:5500, plinth:200, overhang:600, gableOver:400,
+      stair:{ x1:4150, x2:4850, yB:4300, yT:2500, n:12 },
+      atticSlab:[ {x:4840,y:100,w:3060,h:4300}, {x:4100,y:1700,w:740,h:800} ],
+      decks:[ {id:'dk1',name:'앞 데크',x:0,y:4500,w:8000,h:2000},
+              {id:'dk2',name:'뒤 다용도 데크 (세탁기·보일러)',x:0,y:-1500,w:4900,h:1500} ] },
+    floors:{
+      f1:{
+        walls:[ ext('w1',100,100,7900,100), ext('w2',7900,100,7900,4400), ext('w3',7900,4400,100,4400), ext('w4',100,4400,100,100),
+          {id:'p1',x1:4900,y1:100,x2:4900,y2:4400,t:120,type:'bearing'},
+          {id:'p2',x1:4900,y1:1500,x2:7900,y2:1500,t:100,type:'partition'},
+          {id:'v1',x1:3100,y1:3600,x2:4150,y2:3600,t:20,type:'virtual'},
+          {id:'v2',x1:3100,y1:3600,x2:3100,y2:4400,t:20,type:'virtual'},
+          {id:'v3',x1:4150,y1:2500,x2:4150,y2:4400,t:20,type:'virtual'},
+          {id:'v4',x1:4150,y1:2500,x2:4900,y2:2500,t:20,type:'virtual'} ],
+        openings:[
+          {id:'d1',wall:'w3',pos:4250,w:900,h:2100,sill:0,kind:'door',side:-1,hinge:'start',name:'현관문',ext:true},
+          {id:'o1',wall:'w3',pos:6400,w:1800,h:1300,sill:800,kind:'window',name:'거실창'},
+          {id:'o2',wall:'w3',pos:1500,w:1200,h:1200,sill:900,kind:'window',name:'방 창'},
+          {id:'d2',wall:'w1',pos:3400,w:900,h:2100,sill:0,kind:'door',side:-1,hinge:'end',name:'후문',ext:true},
+          {id:'o3',wall:'w1',pos:1350,w:1200,h:600,sill:1200,kind:'window',name:'주방창'},
+          {id:'o4',wall:'w1',pos:6300,w:600,h:500,sill:1500,kind:'window',name:'욕실창'},
+          {id:'o5',wall:'w4',pos:1800,w:1500,h:1200,sill:900,kind:'window',name:'거실 측창'},
+          {id:'o6',wall:'w2',pos:2900,w:1200,h:1200,sill:900,kind:'window',name:'방 측창'},
+          {id:'d3',wall:'p1',pos:700,w:700,h:2000,sill:0,kind:'door',side:-1,hinge:'start',name:'욕실문'},
+          {id:'d4',wall:'p1',pos:1900,w:800,h:2050,sill:0,kind:'door',side:-1,hinge:'end',name:'방문'} ],
+        rooms:[
+          {id:'r1',name:'거실',x:1650,y:2650,mat:'oak'}, {id:'r2',name:'주방',x:1500,y:1000,mat:'oak'},
+          {id:'r3',name:'욕실',x:6400,y:950,mat:'bathtile'}, {id:'r4',name:'방',x:6350,y:2700,mat:'oak'},
+          {id:'r5',name:'현관',x:3620,y:3950,mat:'entry'}, {id:'r6',name:'계단',x:4500,y:3500,mat:'oak'} ]
+      },
+      attic:{
+        walls:[ ext('a1',100,100,7900,100), ext('a2',7900,100,7900,4400), ext('a3',7900,4400,100,4400), ext('a4',100,4400,100,100),
+          {id:'ra1',x1:4900,y1:100,x2:4900,y2:1700,t:60,type:'rail'},
+          {id:'ra2',x1:4900,y1:1700,x2:4100,y2:1700,t:60,type:'rail'},
+          {id:'ra3',x1:4100,y1:1700,x2:4100,y2:2500,t:60,type:'rail'},
+          {id:'ra4',x1:4900,y1:2500,x2:4900,y2:4400,t:60,type:'rail'},
+          {id:'va1',x1:4100,y1:2500,x2:4900,y2:2500,t:20,type:'virtual'} ],
+        openings:[
+          {id:'ao1',wall:'a3',pos:1500,w:1000,h:700,sill:500,kind:'window',name:'다락 정면창'},
+          {id:'ao2',wall:'a2',pos:2150,w:900,h:900,sill:600,kind:'window',name:'다락 북측창'},
+          {id:'ao3',wall:'a1',pos:2300,w:1400,h:600,sill:700,kind:'window',name:'보이드 고창'} ],
+        rooms:[ {id:'ar1',name:'다락방',x:6350,y:2250,mat:'oak'}, {id:'ar2',name:'보이드',x:2300,y:2250,void:true} ]
+      }
+    },
+    furniture:[
+      F('fu1','counter','f1',1950,500,0), F('fu2','fridge','f1',550,560,0),
+      F('fu3','dining','f1',1900,1750,0), F('fu4','chair','f1',1650,1180,0), F('fu5','chair','f1',2150,1180,0), F('fu6','chair','f1',1900,2320,180),
+      F('fu7','rug','f1',1700,3000,0), F('fu8','sofa','f1',625,3000,270), F('fu9','tv','f1',2900,3000,90),
+      F('fu10','shoe','f1',2800,4125,180), F('fu11','plant','f1',450,4050,0),
+      F('fu12','basin','f1',5975,425,0), F('fu13','toilet','f1',6500,540,0), F('fu14','shower','f1',7350,650,0),
+      F('fu15','bedQ','f1',6775,3000,90), F('fu16','wardrobe','f1',7100,1850,0), F('fu17','desk','f1',5600,4050,180),
+      F('fu18','washer','f1',600,-375,180), F('fu19','boiler','f1',1300,-225,180),
+      F('fu20','bedSS','attic',6800,2250,90), F('fu21','desk','attic',5600,450,0), F('fu22','shelf','attic',7400,4125,180),
+      F('fu23','rug','attic',5900,2500,0,{w:1400,d:1000})
+    ]
+  };
+}
+const wallLen = w => Math.hypot(w.x2-w.x1, w.y2-w.y1);
+function wallOps(fl, w){
+  return fl.openings.filter(o=>o.wall===w.id)
+    .map(o=>({o, a:o.pos-o.w/2, b:o.pos+o.w/2, sill:o.sill, head:o.sill+o.h})).sort((p,q)=>p.a-q.a);
+}
+function wallPieces(L, H, ops){
+  const res=[]; let cur=0;
+  for(const o of ops){
+    const a=Math.max(0,o.a), b=Math.min(L,o.b); if(b<=a) continue;
+    if(a>cur) res.push({x0:cur,x1:a,y0:0,y1:H});
+    if(o.sill>0) res.push({x0:a,x1:b,y0:0,y1:Math.min(o.sill,H)});
+    if(o.head<H) res.push({x0:a,x1:b,y0:o.head,y1:H});
+    cur=Math.max(cur,b);
+  }
+  if(cur<L) res.push({x0:cur,x1:L,y0:0,y1:H});
+  return res;
+}
+function boxUV(geo, sx, sy, sz){
+  const uv=geo.attributes.uv, dims=[[sz,sy],[sz,sy],[sx,sz],[sx,sz],[sx,sy],[sx,sy]];
+  for(let f=0;f<6;f++) for(let k=0;k<4;k++){ const i=f*4+k; uv.setXY(i, uv.getX(i)*dims[f][0], uv.getY(i)*dims[f][1]); }
+  uv.needsUpdate=true; return geo;
+}
+function texCanvas(w,h,draw,srgb=true){
+  const c=document.createElement('canvas'); c.width=w; c.height=h; draw(c.getContext('2d'),w,h);
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; if(srgb) t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8; return t;
+}
+function houseMaterials(){
+  if(houseMaterials.m) return houseMaterials.m;
+  const zinc=texCanvas(256,256,(x,w,h)=>{
+    for(let i=0;i<4;i++){ const X=i*64, g=x.createLinearGradient(X,0,X+64,0);
+      g.addColorStop(0,'#8f9495'); g.addColorStop(.06,'#d9dcdc'); g.addColorStop(.12,'#aeb3b4'); g.addColorStop(.5,'#bcc0c1'); g.addColorStop(1,'#b3b7b8');
+      x.fillStyle=g; x.fillRect(X,0,64,h); } });
+  const shingle=texCanvas(256,256,(x,w,h)=>{ x.fillStyle='#3d3632'; x.fillRect(0,0,w,h);
+    const rows=8, rh=h/rows; for(let r=0;r<rows;r++){ const off=(r%2)*16; for(let c=-1;c<9;c++){ const v=(Math.sin(r*12.9+c*78.2)*43758.5)%1; x.fillStyle=`hsl(18,${10+Math.abs(v)*8}%,${20+Math.abs(v)*9}%)`; x.fillRect(c*32+off+1,r*rh+1,30,rh-3); }
+      x.fillStyle='rgba(0,0,0,.35)'; x.fillRect(0,r*rh+rh-3,w,3); } });
+  const deck=texCanvas(256,256,(x,w,h)=>{ const n=7; for(let i=0;i<n;i++){ x.fillStyle=`hsl(28,${38+(i*7)%10}%,${44+(i*13)%9}%)`; x.fillRect(0,i*h/n,w,h/n-3); x.fillStyle='rgba(40,25,10,.5)'; x.fillRect(0,(i+1)*h/n-3,w,3); } });
+  const conc=texCanvas(128,128,(x,w,h)=>{ x.fillStyle='#b8b5ae'; x.fillRect(0,0,w,h); for(let i=0;i<900;i++){ x.fillStyle=Math.random()<.5?'rgba(0,0,0,.06)':'rgba(255,255,255,.08)'; x.fillRect(Math.random()*w,Math.random()*h,2,2);} });
+  zinc.repeat.set(1,1); deck.repeat.set(1,1);
+  const S=(o)=>new THREE.MeshStandardMaterial(o);
+  return houseMaterials.m={
+    zinc:S({map:zinc,roughness:.42,metalness:.35}), panelRaw:S({color:0xe9e6dd,roughness:.85}),
+    inner:S({color:0xf3f0e9,roughness:.92}), edge:S({color:0xd5d1c8,roughness:.85}), part:S({color:0xf7f5f0,roughness:.94}),
+    shingle:S({map:shingle,roughness:.88}), soffit:S({color:0xe7dfd0,roughness:.9}), trim:S({color:0x34383c,roughness:.6,metalness:.3}),
+    conc:S({map:conc,roughness:.95}), deck:S({map:deck,roughness:.8}), deckSkirt:S({color:0x5a4634,roughness:.9}),
+    glass:new THREE.MeshPhysicalMaterial({color:0xa9cbe0,roughness:.06,metalness:.1,transparent:true,opacity:.32,side:THREE.DoubleSide}),
+    frame:S({color:0x2e3236,roughness:.5,metalness:.4}), doorExt:S({color:0x3a2e27,roughness:.6}), doorIn:S({color:0xe9e2d3,roughness:.7}),
+    rail:S({color:0x2b2f33,roughness:.5,metalness:.5}), stair:S({color:0xc49a6a,roughness:.65}), ceiling:S({color:0xf6f3ec,roughness:.95}),
+    floorPlain:S({color:0xc99c66,roughness:.7}), knob:S({color:0xc8b48a,metalness:.8,roughness:.3})
+  };
+}
+function buildHouse(st, opts={}){
+  const M=houseMaterials(), me=st.meta, W=me.W/1000, D=me.D/1000, hx=W/2, hz=D/2, FH=me.floorH/1000;
+  const root=new THREE.Group(); root.name='house';
+  const parts={}; for(const k of ['base','floor','f1','attic','shell','roof','stair','rails','decks','open']){ parts[k]=new THREE.Group(); parts[k].name=k; root.add(parts[k]); }
+  const add=(grp,geo,mat,x,y,z,ry=0)=>{ const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; grp.add(m); return m; };
+  const L=(x,y)=>[x/1000-hx, y/1000-hz];
+  const pl=me.plinth/1000;
+  add(parts.base, boxUV(new THREE.BoxGeometry(W,pl,D),W,pl,D), M.conc, 0,-pl/2,0);
+  { const fm = opts.floorTex && opts.floorTex.f1 ? new THREE.MeshStandardMaterial({map:opts.floorTex.f1,roughness:.68}) : M.floorPlain;
+    const fp=new THREE.Mesh(new THREE.PlaneGeometry(W-.02,D-.02),fm); fp.rotation.x=-Math.PI/2; fp.position.y=.004; fp.receiveShadow=true; parts.floor.add(fp); }
+  const wallMeshes=[];
+  const buildOpening=(w,p,ox,oz,dx,dz,ry,t,base)=>{
+    const o=p.o, ow=p.b-p.a, oh=p.head-p.sill, mid=(p.a+p.b)/2, fr=.05, fd=Math.min(t,.1);
+    const g=new THREE.Group(); g.position.set(ox+dx*mid, base+p.sill, oz+dz*mid); g.rotation.y=ry; parts.open.add(g);
+    const fb=(sx,sy,sz,x,y,z,m)=>{ const mm=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m); mm.position.set(x,y,z); mm.castShadow=true; g.add(mm); return mm; };
+    fb(ow,fr,fd,0,oh-fr/2,0,M.frame); fb(fr,oh,fd,-ow/2+fr/2,oh/2,0,M.frame); fb(fr,oh,fd,ow/2-fr/2,oh/2,0,M.frame);
+    if(o.kind==='window'){
+      fb(ow,fr,fd,0,fr/2,0,M.frame);
+      const gl=new THREE.Mesh(new THREE.PlaneGeometry(ow-2*fr,oh-2*fr),M.glass); gl.position.y=oh/2; gl.userData.glass=true; g.add(gl);
+      if(ow>=1.0) fb(.04,oh-2*fr,fd*.8,0,oh/2,0,M.frame);
+      if(w.ext) fb(ow+.1,.03,.12,0,-.015,(t/2+.04)*Math.sign(Math.sin(ry)*(ox+dx*mid)+Math.cos(ry)*(oz+dz*mid)||1),M.trim);
+    } else {
+      const side=o.side||1, atStart=o.hinge!=='end', lw=ow-2*fr, lh=oh-fr;
+      const pivot=new THREE.Group(); pivot.position.set(atStart?-ow/2+fr:ow/2-fr,0,0); g.add(pivot);
+      const leaf=new THREE.Mesh(new THREE.BoxGeometry(lw,lh,.04), o.ext?M.doorExt:M.doorIn); leaf.position.set(atStart?lw/2:-lw/2,lh/2,0); leaf.castShadow=true; pivot.add(leaf);
+      const kn=new THREE.Mesh(new THREE.SphereGeometry(.03,10,8),M.knob); kn.position.set(atStart?lw-.08:-lw+.08,1.0,.04); pivot.add(kn);
+      const ang=(opts.doorOpen ?? .42)*Math.PI; pivot.rotation.y = atStart ? -side*ang : side*ang;
+    }
+  };
+  const buildWall=(grp,fl,w,base,H)=>{
+    const len=wallLen(w)/1000; if(len<.01||H<=0) return;
+    const dx=(w.x2-w.x1)/1000/len, dz=(w.y2-w.y1)/1000/len, t=w.t/1000, e=w.ext?t/2:0, ry=Math.atan2(-dz,dx);
+    const [sx,sz]=L(w.x1,w.y1), ox=sx-dx*e, oz=sz-dz*e, nx=Math.sin(ry), nz=Math.cos(ry);
+    const ops=wallOps(fl,w).map(p=>({...p,a:p.a/1000+e,b:p.b/1000+e,sill:p.sill/1000,head:p.head/1000}));
+    for(const p of wallPieces(len+2*e,H,ops)){
+      const pw=p.x1-p.x0, ph=p.y1-p.y0; if(pw<.004||ph<.004) continue;
+      const mid=(p.x0+p.x1)/2, cx=ox+dx*mid, cz=oz+dz*mid;
+      let mats;
+      if(w.ext){ const out=(cx*nx+cz*nz)>0; mats=[M.edge,M.edge,M.edge,M.edge,out?M.zinc:M.inner,out?M.inner:M.zinc]; }
+      else mats = w.type==='bearing'?M.inner:M.part;
+      const m=add(grp,boxUV(new THREE.BoxGeometry(pw,ph,t),pw,ph,t),mats,cx,base+(p.y0+p.y1)/2,cz,ry);
+      m.userData.wall={ext:!!w.ext,outIdx:w.ext?((cx*nx+cz*nz)>0?4:5):-1,base,h:ph,y0:base+p.y0};
+      wallMeshes.push(m);
+    }
+    for(const p of ops) buildOpening(w,p,ox,oz,dx,dz,ry,t,base);
+  };
+  const buildRail=(w,base)=>{
+    const len=wallLen(w)/1000; if(len<.01) return;
+    const dx=(w.x2-w.x1)/1000/len, dz=(w.y2-w.y1)/1000/len, ry=Math.atan2(-dz,dx), [sx,sz]=L(w.x1,w.y1), h=1.0;
+    const at=s=>[sx+dx*s, sz+dz*s];
+    { const [cx,cz]=at(len/2); add(parts.rails,new THREE.BoxGeometry(len+.05,.05,.07),M.rail,cx,base+h,cz,ry); add(parts.rails,new THREE.BoxGeometry(len,.03,.04),M.rail,cx,base+.1,cz,ry); }
+    const np=Math.max(1,Math.ceil(len/1.2)); for(let i=0;i<=np;i++){ const [cx,cz]=at(len*i/np); add(parts.rails,new THREE.BoxGeometry(.05,h,.05),M.rail,cx,base+h/2,cz,ry); }
+    const nb=Math.floor(len/.11); if(nb>1){ const im=new THREE.InstancedMesh(new THREE.BoxGeometry(.018,h-.12,.018),M.rail,nb); const m4=new THREE.Matrix4();
+      for(let i=0;i<nb;i++){ const [cx,cz]=at((i+.5)*len/nb); m4.makeTranslation(cx,base+.1+(h-.12)/2,cz); im.setMatrixAt(i,m4); } im.castShadow=true; parts.rails.add(im); }
+  };
+  for(const w of st.floors.f1.walls){ if(w.removed||w.type==='virtual') continue; if(w.type==='rail'){ buildRail(w,0); continue; }
+    buildWall(parts.f1, st.floors.f1, w, 0, (w.ext?me.floorH:me.ceil1)/1000); }
+  for(const w of st.floors.attic.walls){ if(w.removed||w.type==='virtual') continue; if(w.type==='rail'){ buildRail(w,FH); continue; }
+    buildWall(w.ext?parts.shell:parts.attic, st.floors.attic, w, FH, ((w.ext?me.eave:me.floorH+1500)-me.floorH)/1000); }
+  const eave=me.eave/1000, ridge=me.ridge/1000;
+  for(const gx of [.1, W-.1]){
+    const sh=new THREE.Shape(); sh.moveTo(-hz,0); sh.lineTo(hz,0); sh.lineTo(0,ridge-eave); sh.closePath();
+    const geo=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:false}); geo.rotateY(Math.PI/2); geo.translate(-.1,0,0);
+    const gm=add(parts.shell,geo,[M.zinc,M.edge],gx-hx,eave,0); gm.userData.wall={ext:true,gable:true,base:eave,h:ridge-eave,y0:eave};
+    const inner=new THREE.Mesh(new THREE.ShapeGeometry(sh),M.inner); inner.rotation.y=Math.PI/2; inner.position.set(gx-hx+(gx<1?.101:-.101),eave,0); parts.shell.add(inner);
+    wallMeshes.push(gm);
+  }
+  { const run=hz, rise=ridge-eave, pitch=Math.atan2(rise,run), ov=me.overhang/1000, gov=me.gableOver/1000, th=.16;
+    const slope=(run+ov)/Math.cos(pitch), RL=W+2*gov;
+    for(const s of [-1,1]){
+      const a=s*pitch, zm=s*(run+ov)/2, ym=(ridge+eave-ov*Math.tan(pitch))/2, ny=Math.cos(a), nz=Math.sin(a);
+      const geo=boxUV(new THREE.BoxGeometry(RL,th,slope),RL,th,slope);
+      const m=new THREE.Mesh(geo,[M.trim,M.trim,M.shingle,M.soffit,M.trim,M.trim]); m.rotation.x=a; m.position.set(0,ym+ny*th/2,zm+nz*th/2); m.castShadow=true; m.receiveShadow=true;
+      m.userData.roof={side:s,slope}; parts.roof.add(m);
+      const fy=eave-ov*Math.tan(pitch); add(parts.roof,new THREE.BoxGeometry(RL,.2,.035),M.trim,0,fy+.02,s*(run+ov+.01));
+    }
+    add(parts.roof,new THREE.BoxGeometry(RL,.07,.34),M.trim,0,ridge+th/Math.cos(pitch)+.02,0);
+    parts.roof.userData={pitch,run,ov,gov,th,RL,slope};
+  }
+  for(const r of me.atticSlab){
+    const w=r.w/1000, d=r.h/1000, [cx,cz]=L(r.x+r.w/2,r.y+r.h/2);
+    add(parts.attic,new THREE.BoxGeometry(w,.12,d),M.ceiling,cx,FH-.065,cz);
+    const pg=new THREE.PlaneGeometry(w,d); pg.rotateX(-Math.PI/2);
+    const pos=pg.attributes.position, uv=pg.attributes.uv;
+    for(let i=0;i<pos.count;i++){ const X=(pos.getX(i)+cx+hx)*1000, Y=(pos.getZ(i)+cz+hz)*1000; uv.setXY(i,X/me.W,1-Y/me.D); }
+    const fm = opts.floorTex && opts.floorTex.attic ? new THREE.MeshStandardMaterial({map:opts.floorTex.attic,roughness:.68}) : M.floorPlain;
+    const f=new THREE.Mesh(pg,fm); f.position.set(cx,FH+.003,cz); f.receiveShadow=true; parts.attic.add(f);
+  }
+  { const sc=me.stair, n=sc.n, rise=FH/n, run=(sc.yB-sc.yT)/1000, tr=run/n, sw=(sc.x2-sc.x1)/1000, [scx]=L((sc.x1+sc.x2)/2,0);
+    for(let i=1;i<n;i++){ const zc=sc.yB/1000-(i-.5)*tr-hz; add(parts.stair,new THREE.BoxGeometry(sw-.06,.04,tr+.04),M.stair,scx,i*rise-.02,zc); }
+    const Ls=Math.hypot(run,FH), ang=Math.atan2(FH,run), zc=(sc.yB+sc.yT)/2000-hz;
+    for(const xx of [sc.x1/1000+.02, sc.x2/1000-.02]){ const m=add(parts.stair,new THREE.BoxGeometry(.04,.26,Ls),M.stair,xx-hx,FH/2-.12,zc); m.rotation.x=ang; }
+    const hr=add(parts.stair,new THREE.BoxGeometry(.045,.045,Ls),M.rail,sc.x1/1000-hx-.01,FH/2+.9,zc); hr.rotation.x=ang;
+    for(const t of [0.08,.5,.92]){ const zz=sc.yB/1000-hz-run*t, yy=FH*t; add(parts.stair,new THREE.BoxGeometry(.035,.9,.035),M.rail,sc.x1/1000-hx-.01,yy+.45,zz); }
+  }
+  for(const dk of me.decks){
+    const w=dk.w/1000, d=dk.h/1000, [cx,cz]=L(dk.x+dk.w/2,dk.y+dk.h/2);
+    add(parts.decks,boxUV(new THREE.BoxGeometry(w,.05,d),w,.05,d),M.deck,cx,-.045,cz);
+    add(parts.decks,new THREE.BoxGeometry(w-.06,pl-.05,d-.06),M.deckSkirt,cx,-pl/2-.045,cz);
+  }
+  root.userData={parts,wallMeshes};
+  return root;
+}
+const _fmat={};
+function fmat(c,opts={}){ const k=c+JSON.stringify(opts); return _fmat[k]||(_fmat[k]=new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.75},opts))); }
+function furnMesh(f, st){
+  const c=CATALOG[f.type]||{kind:'box',color:'#ccc'}, me=st.meta, w=f.w/1000, d=f.d/1000, h=(f.h||c.h||800)/1000, col=f.color||c.color;
+  const g=new THREE.Group(); g.userData.fid=f.id;
+  const box=(sx,sy,sz,x,y,z,cl=col,o)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),fmat(cl,o)); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; g.add(m); return m; };
+  const cyl=(r,hh,x,y,z,cl=col,seg=16)=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,hh,seg),fmat(cl)); m.position.set(x,y,z); m.castShadow=true; g.add(m); return m; };
+  switch(c.kind){
+    case 'sofa': box(w,.2,d,0,.2,0); box(w-.3,.18,d-.25,0,.39,.1,'#'+new THREE.Color(col).offsetHSL(0,0,.06).getHexString()); box(w,h-.2,.2,0,.2+(h-.2)/2,-d/2+.1); box(.15,.55,d,-w/2+.075,.275+.05,0); box(.15,.55,d,w/2-.075,.325,0); break;
+    case 'bed': box(w,.28,d,0,.14,0,'#8a6a4c'); box(w-.04,.2,d-.06,0,.38,.02); box(w,.95,.06,0,.475,-d/2+.03,'#8a6a4c'); for(const s of (w>1.2?[-1,1]:[0])) box(w>1.2?w/2-.15:w-.2,.1,.38,s*w/4,.53,-d/2+.3,'#ffffff'); box(w-.02,.06,d*.55,0,.5,d*.2,'#9fb3c8'); break;
+    case 'table': { box(w,.035,d,0,h-.018,0); const lx=w/2-.05, lz=d/2-.05; for(const [a,b] of [[lx,lz],[-lx,lz],[lx,-lz],[-lx,-lz]]) box(.045,h-.035,.045,a,(h-.035)/2,b,'#4a3a2c'); break; }
+    case 'chair': box(w,.04,d*.9,0,.45,.02); box(w,.42,.04,0,.45+.21,-d/2+.03); for(const [a,b] of [[1,1],[-1,1],[1,-1],[-1,-1]]) box(.035,.45,.035,a*(w/2-.04),.225,b*(d/2-.05)); break;
+    case 'counter': box(w,h-.04,d,0,(h-.04)/2,0); box(w+.01,.04,d+.02,0,h-.02,0,'#3a3b3d'); box(.5,.02,.38,-w/4,h+.001,.02,'#9ea6ad',{metalness:.7,roughness:.3}); for(const k of [-1,1]) cyl(.09,.012,w/4+k*.13,h+.006,.02,'#222'); box(w,.65,.33,0,1.55,-d/2+.165,'#efebe4'); break;
+    case 'tv': box(w,h,d,0,h/2,0); box(Math.min(1.25,w*.8),.72,.04,0,h+.42,-d/2+.08,'#141518'); break;
+    case 'toilet': box(w*.9,.38,.2,0,.55,-d/2+.1); cyl(.19,.4,0,.2,.08,col,20); break;
+    case 'basin': box(w,.5,d,0,.6,0,'#d9cdb9'); box(w,.12,d,0,.91,0); box(.5,.7,.03,0,1.4,-d/2+.015,'#cfd8dc',{metalness:.9,roughness:.1}); break;
+    case 'shower': { box(w,.05,d,0,.025,0,'#e8eef0'); const gm=new THREE.MeshPhysicalMaterial({color:0xcfe3ec,transparent:true,opacity:.25,roughness:.05});
+      for(const [sx,sz,x,z] of [[w,.01,0,d/2],[.01,d,-w/2,0]]){ const m=new THREE.Mesh(new THREE.BoxGeometry(sx,h,sz),gm); m.position.set(x,h/2,z); g.add(m); } cyl(.1,.01,0,1.95,-d/2+.2,'#bbb'); break; }
+    case 'washer': box(w,h,d,0,h/2,0); cyl(.2,.03,0,h*.55,d/2,'#b8c4cc',24).rotation.x=Math.PI/2; break;
+    case 'rug': box(w,.012,d,0,.006,0); break;
+    case 'plant': cyl(.16,.38,0,.19,0,'#c9b8a0'); { const m=new THREE.Mesh(new THREE.IcosahedronGeometry(.32,0),fmat(col,{flatShading:true})); m.position.y=.75; m.scale.set(1,1.4,1); m.castShadow=true; g.add(m); } break;
+    default: box(w,h,d,0,h/2,0); box(.012,h*.9,.012,0,h*.48,d/2+.003,'#777'); break;
+  }
+  const hx=me.W/2000, hz=me.D/2000;
+  g.position.set(f.x/1000-hx, f.floor==='attic'?me.floorH/1000+.004:.004, f.y/1000-hz);
+  g.rotation.y=-f.rot*Math.PI/180;
+  return g;
+}
+/* ============================ /HOUSE CORE ============================ */
+
+/* ---------------- 유틸 ---------------- */
+const $=s=>document.querySelector(s);
+const D2R=Math.PI/180;
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const sstep=(a,b,v)=>{ const t=clamp((v-a)/(b-a)); return t*t*(3-2*t); };
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const eOut=t=>1-Math.pow(1-t,3);
+const backOut=t=>{ const c=1.5; return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2); };
+function segDist(px,py,x1,y1,x2,y2){ const dx=x2-x1, dy=y2-y1, L2=dx*dx+dy*dy; let t=L2?((px-x1)*dx+(py-y1)*dy)/L2:0; t=clamp(t); const qx=x1+dx*t, qy=y1+dy*t; return {d:Math.hypot(px-qx,py-qy),qx,qy,t}; }
+function hash(x,z){ const s=Math.sin(x*127.1+z*311.7)*43758.5453; return s-Math.floor(s); }
+function vnoise(x,z){ const xi=Math.floor(x), zi=Math.floor(z), xf=x-xi, zf=z-zi, u=xf*xf*(3-2*xf), v=zf*zf*(3-2*zf);
+  const a=hash(xi,zi), b=hash(xi+1,zi), c=hash(xi,zi+1), d=hash(xi+1,zi+1); return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v; }
+const fbm=(x,z)=>vnoise(x,z)*.5+vnoise(x*2.07,z*2.07)*.3+vnoise(x*4.3,z*4.3)*.2;
+let seed=724; const rnd=()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; };
+const _mc={};
+const mat=(c,o={})=>{ const k=c+JSON.stringify(o); return _mc[k]||(_mc[k]=new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.88,flatShading:true},o))); };
+function mk(geo,m,x=0,y=0,z=0,parent=scene,shadow=true){ const o=new THREE.Mesh(geo,m); o.position.set(x,y,z); o.castShadow=shadow; o.receiveShadow=true; parent.add(o); return o; }
+
+/* ---------------- 설계안 ---------------- */
+let S=null, designSrc='기본 설계안';
+try{ const s=JSON.parse(localStorage.getItem(STORE_KEY)); if(s&&s.v===1&&s.floors&&s.meta){ S=s; designSrc='house-plan.html 저장 설계안'; } }catch(e){}
+if(!S) S=defaultState();
+
+/* ---------------- 장면 ---------------- */
+const canvas=$('#c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth<860?1.5:2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.95; renderer.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene(); scene.fog=new THREE.Fog(0xcfe2f2,170,950);
+const camera=new THREE.PerspectiveCamera(46,1,.1,4000);
+const controls=new OrbitControls(camera,canvas); controls.enableDamping=true; controls.maxPolarAngle=1.5; controls.minDistance=3; controls.maxDistance=220; controls.target.set(1.5,1.2,0);
+camera.position.set(-21,12,24);
+
+// 하늘
+const skyU={top:{value:new THREE.Color()},hor:{value:new THREE.Color()},bot:{value:new THREE.Color(0x5d6b4e)},sunDir:{value:new THREE.Vector3(0,1,0)},sunCol:{value:new THREE.Color()}};
+const sky=new THREE.Mesh(new THREE.SphereGeometry(2000,32,16),new THREE.ShaderMaterial({uniforms:skyU,side:THREE.BackSide,depthWrite:false,fog:false,
+  vertexShader:`varying vec3 vW; void main(){ vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz-cameraPosition; gl_Position=projectionMatrix*viewMatrix*w; }`,
+  fragmentShader:`uniform vec3 top,hor,bot,sunDir,sunCol; varying vec3 vW;
+void main(){ vec3 d=normalize(vW); float h=d.y; vec3 c=h>0.?mix(hor,top,pow(clamp(h,0.,1.),.45)):mix(hor,bot,clamp(-h*5.,0.,1.));
+ float s=max(dot(d,normalize(sunDir)),0.); c+=sunCol*(pow(s,1200.)*8.+pow(s,10.)*.32); gl_FragColor=vec4(c,1.);
+#include <colorspace_fragment>
+}`}));
+sky.renderOrder=-10; sky.frustumCulled=false; scene.add(sky);
+const starGeo=new THREE.BufferGeometry(); { const a=[]; for(let i=0;i<900;i++){ const t=rnd()*Math.PI*2, y=.08+rnd()*.92, r=Math.sqrt(1-y*y); a.push(Math.cos(t)*r*1800,y*1800,Math.sin(t)*r*1800); } starGeo.setAttribute('position',new THREE.Float32BufferAttribute(a,3)); }
+const stars=new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false,transparent:true,opacity:0,fog:false,depthWrite:false})); stars.renderOrder=-9; scene.add(stars);
+
+const hemi=new THREE.HemisphereLight(0xdbe8ff,0x6d6248,1); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff3e0,3); sun.castShadow=true; sun.shadow.mapSize.set(innerWidth<860?1024:2048,innerWidth<860?1024:2048);
+Object.assign(sun.shadow.camera,{left:-32,right:32,top:32,bottom:-32,near:10,far:260}); sun.shadow.bias=-.0005; sun.shadow.normalBias=.03;
+const SUN_T=new THREE.Vector3(2,0,0); sun.target.position.copy(SUN_T); scene.add(sun,sun.target);
+
+/* ---------------- 대지 데이터 (현장 사진 기준 재구성) ----------------
+   X=동, Z=남, Y=높이(m). 패드 상면 = 0. 집 중심 = (0,0), 장변 남북, 정면 동향.
+   건축허가 배치도의 '건물–서측 경계 6,000' 이격을 서측 도로(노장길) 쪽에 적용 */
+const PAD=[[-9,-12],[5,-14.5],[14,-9],[14.5,7],[5,11],[-9,10.3],[-10,0]];
+const EDGE_NAMES=['북','북동','동','남동','남','남서','서'];
+const PADC=PAD.reduce((a,p)=>[a[0]+p[0]/PAD.length,a[1]+p[1]/PAD.length],[0,0]);
+function inPoly(x,z,P){ let c=false; for(let i=0,j=P.length-1;i<P.length;j=i++){ const [xi,zi]=P[i],[xj,zj]=P[j]; if(((zi>z)!==(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi)+xi)) c=!c; } return c; }
+function padSD(x,z){ let d=1e9; for(let i=0;i<PAD.length;i++){ const a=PAD[i], b=PAD[(i+1)%PAD.length]; d=Math.min(d,segDist(x,z,a[0],a[1],b[0],b[1]).d); } return inPoly(x,z,PAD)?-d:d; }
+function edgePt(i,t,inset=0){ const a=PAD[i], b=PAD[(i+1)%PAD.length]; let x=lerp(a[0],b[0],t), z=lerp(a[1],b[1],t); const L=Math.hypot(b[0]-a[0],b[1]-a[1]); let nx=-(b[1]-a[1])/L, nz=(b[0]-a[0])/L; if((PADC[0]-x)*nx+(PADC[1]-z)*nz<0){nx=-nx;nz=-nz;} return [x+nx*inset,z+nz*inset,Math.atan2(b[1]-a[1],b[0]-a[0])]; }
+function sampleRoad(pts,hfn,n){ const c=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],0,p[1])),false,'centripetal'); return c.getSpacedPoints(n).map(v=>({x:v.x,z:v.z,h:hfn(v.x,v.z)})); }
+const ROADS=[
+  { name:'노장길(서측)', hw:1.6, pts:sampleRoad([[-34,-62],[-21,-35],[-13.4,-14],[-12.3,-2],[-11.7,7],[-14.5,15.5],[-24,25],[-44,37],[-72,50]],(x,z)=>-.72+Math.max(0,-z-16)*.03+Math.max(0,z-14)*.012,200) },
+  { name:'논길(남측)', hw:1.5, pts:sampleRoad([[-12.6,11.6],[-6,12.6],[4,13.3],[14,12.1],[26,15],[46,24],[82,37]],(x,z)=>-.72-clamp((x+12)/58)*.8,160) }
+];
+const STREAM=sampleRoad([[72,-95],[46,-52],[31,-24],[24,0],[29,18],[22,42],[33,72],[28,115]],()=>0,160);
+const RIDGES=[[-150,-135,160,-150,60,78,0],[-120,-100,-135,70,52,92,1],[-115,95,15,155,48,66,0],[85,-115,230,-60,55,62,0],[70,135,240,110,48,52,0],[300,-40,320,90,40,42,0],[-48,-36,-30,-80,20,24,0]];
+function roadNear(x,z){ let best={d:1e9,h:0}; for(const R of ROADS){ const P=R.pts; for(let i=0;i<P.length-1;i++){ const a=P[i], b=P[i+1]; if(Math.abs(x-a.x)>25||Math.abs(z-a.z)>25) continue; const r=segDist(x,z,a.x,a.z,b.x,b.z); const d=r.d-R.hw; if(d<best.d) best={d,h:lerp(a.h,b.h,r.t)}; } } return best; }
+function streamD(x,z){ let d=1e9; const P=STREAM; for(let i=0;i<P.length-1;i++){ const a=P[i], b=P[i+1]; if(Math.abs(x-a.x)>20||Math.abs(z-a.z)>20) continue; d=Math.min(d,segDist(x,z,a.x,a.z,b.x,b.z).d); } return d; }
+function ridgeH(x,z){ let h=0, rock=0; for(const r of RIDGES){ const q=segDist(x,z,r[0],r[1],r[2],r[3]), w2=r[4]*2; if(q.d>=w2) continue; const f=.5*(1+Math.cos(Math.PI*q.d/w2)), n=.72+.55*fbm(x/36+r[5],z/36);
+  const v=r[5]*f*f*n*(.85+.15*Math.sin(q.t*11+r[4])); if(v>h) h=v; if(r[6]&&v>r[5]*.6&&fbm(x/8,z/8)>.52) rock=1; } return {h,rock}; }
+function paddy(x,z){ const c=Math.cos(.35), s=Math.sin(.35), u=x*c+z*s, v=-x*s+z*c, pu=Math.floor(u/24), pv=Math.floor(v/15), fu=u/24-pu, fv=v/15-pv;
+  return {pu,pv,bord:Math.min(fu,1-fu)*24<.5||Math.min(fv,1-fv)*15<.5}; }
+function terrain(x,z){
+  const P=paddy(x,z), wV=sstep(-12,-20,x)+sstep(14,24,z)*sstep(-4,-14,x)*0; // 서쪽 마을
+  let pad=-1.35-.13*clamp(P.pu,-3,12)-.05*clamp(P.pv,-6,8)+(P.bord?.13:0);
+  let vil=-.75+.035*Math.max(0,-x-20)+.02*Math.max(0,-z-10)+.4*fbm(x/14,z/14);
+  let h=lerp(pad,vil,clamp(wV)); let zone=wV>.5?'vil':'paddy';
+  if(z>15&&x<10&&x>-14){ h=lerp(h,-.9+.25*fbm(x/9,z/9),sstep(15,19,z)); zone='vil'; } // 남측 도로 건너 주택지
+  const R=ridgeH(x,z); h+=R.h; if(R.h>3) zone=R.rock?'rock':'forest';
+  const sd0=streamD(x,z); if(sd0<1.8&&zone==='paddy'){ h-=.6*(1-(sd0/1.8)**2); if(sd0<1.1) zone='stream'; }
+  const sd=padSD(x,z);
+  if(sd<0){ h=.0+.02*(fbm(x*.7,z*.7)-.5); zone='pad'; }
+  else if(sd<5){ const t=sstep(0,5,sd); h=lerp(0,h,t); if(zone!=='vil') zone=t<.7?'slope':zone; }
+  if(sd>.05){ const r=roadNear(x,z); if(r.d<2.4){ const k=sstep(0,2.4,r.d); h=lerp(r.h-.05,h,k); if(r.d<.4) zone='road'; } }
+  return {h,zone,P};
+}
+const H=(x,z)=>terrain(x,z).h;
+const COL={pad:new THREE.Color(0xb98756),slope:new THREE.Color(0x8c9550),vil:new THREE.Color(0x9a9a7c),forest:new THREE.Color(0x3f6a34),rock:new THREE.Color(0x8d8b84),road:new THREE.Color(0x6a6c6c),stream:new THREE.Color(0x5b6f5a)};
+const RICE=[new THREE.Color(0xd5bf4a),new THREE.Color(0xcdb843),new THREE.Color(0xc2b647),new THREE.Color(0xaab449),new THREE.Color(0xa88c5a)];
+function colorAt(x,z,t,out){
+  if(t.zone==='paddy'){ if(t.P.bord) out.setHex(0x6f8040); else { const k=hash(t.P.pu,t.P.pv); out.copy(RICE[k<.45?0:k<.7?1:k<.82?2:k<.92?3:4]); } }
+  else if(t.zone==='forest'){ const n=fbm(x/20,z/20); out.copy(COL.forest).offsetHSL((n-.5)*.06,0,(n-.5)*.12+(t.h>40?-.03:0)); }
+  else out.copy(COL[t.zone]||COL.slope);
+  if(t.zone==='pad'||t.zone==='slope'||t.zone==='vil') out.offsetHSL(0,0,(fbm(x*.4,z*.4)-.5)*.07);
+  return out;
+}
+function terrainMesh(size,seg,cx,cz,lowerInside){
+  const g=new THREE.PlaneGeometry(size,size,seg,seg); g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position, cols=new Float32Array(pos.count*3), c=new THREE.Color();
+  for(let i=0;i<pos.count;i++){ const x=pos.getX(i)+cx, z=pos.getZ(i)+cz, t=terrain(x,z); let h=t.h;
+    if(lowerInside&&Math.abs(x)<lowerInside-.01&&Math.abs(z)<lowerInside-.01) h-=.8;
+    pos.setXYZ(i,x,h,z); colorAt(x,z,t,c); cols[i*3]=c.r; cols[i*3+1]=c.g; cols[i*3+2]=c.b; }
+  g.setAttribute('color',new THREE.BufferAttribute(cols,3)); g.computeVertexNormals();
+  const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.96})); m.receiveShadow=true; scene.add(m); return m;
+}
+
+/* ---------------- 단계 시스템 ---------------- */
+const STAGES=[
+  {n:'빈 대지',t:'성토 정지 완료',d:'노장길 끝, 마을 북동쪽에 성토한 패드입니다. 서·남쪽은 기존 콘크리트 블록 옹벽이 곡선 도로에 붙어 있고, 동쪽은 한 단 낮은 논으로 열립니다.',p:['패드 = 도로 +0.7 m, 동측 논 +1.3 m 내외','진입: 남서측 도로 모서리 (덤프 진입로)','야적: 강관 · 보도블록 · 유공관(흑색 주름관)']},
+  {n:'기초 형틀·철근',t:'현재 현장 사진 상태',d:'8,000 × 4,500 기초 외곽에 강재 유로폼을 세우고, 방습 비닐과 단열재 위에 철근을 배근합니다. 오·배수 PVC 슬리브는 미리 세워 둡니다.',p:['유로폼 H600 + 강관 띠장, 모서리 버팀','방습 비닐 · 단열재 · D10@200 배근','오수 Ø150 / 우수 Ø100 슬리브 선매립']},
+  {n:'콘크리트 타설',t:'스팬덱 + 75t RC',d:'레미콘과 펌프로 형틀 안을 채워 바닥 기초판을 만듭니다. 양생 후 형틀을 떼면 슬리브만 솟은 평평한 기초가 남습니다 (현장 사진 03).',p:['스팬덱 + 75t RC 타설','진동 다짐 · 쇠흙손 마감','양생 후 형틀 해체']},
+  {n:'벽체 상승',t:'T180 / T100 징크판넬',d:'외벽 T180 판넬(내력)과 중앙 내력벽, 내벽 T100 판넬을 세웁니다. 1층과 다락 외벽, 남·북 박공벽까지 이어서 올라갑니다.',p:['외벽 처마 높이 4,100','중앙 내력벽이 다락 바닥을 받침','현관(동)·후문(서)·창 개구부 확보']},
+  {n:'지붕 프레임',t:'용마루 · 서까래 · 다락 바닥',d:'다락 바닥과 1층에서 다락으로 오르는 계단을 놓고, 용마루와 서까래로 박공지붕 골조를 짭니다. 둘레에는 비계를 세웁니다.',p:['용마루 +5,500 / 처마 +4,100','서까래 @600','다락 FL +2,500 · 보이드 개방 + 난간']},
+  {n:'지붕 크레빙·외장',t:'지붕 마감 · 외벽 징크',d:'지붕을 덮고 슁글로 마감한 뒤 후레싱·처마돌림을 두릅니다. 외벽은 세로골 징크 마감면으로 정리합니다.',p:['방수시트 + 슁글 (지붕 참고자료: 재료만 반영)','처마 600 / 박공 400 내밀기','외벽 세로골 징크 · 코너 후레싱']},
+  {n:'창호·마감 완공',t:'+ 다락방 증축 3,000 × 3,300',d:'창호와 현관문·후문을 달고, 앞·뒤 데크와 북측 다락방 증축(3,000 × 3,300)을 마무리합니다. 담장·식재·비석·마당까지 정리된 완공 모습입니다.',p:['앞 데크 8.0 × 2.0 m / 뒤 다용도 데크','북측 다락방 증축 3,000 × 3,300','조경: 오른쪽 조경 제안 참고']}
+];
+const DUR=3.8;
+const items=[]; let cur=1, animT=1;
+function reg(stage,obj,fn,o={}){ const it={stage,until:o.until??99,obj,fn,delay:o.delay||0,dur:o.dur||1.1}; items.push(it); return it; }
+const A={
+  rise(o,y0){ const oy=o.position.y; y0=y0??oy; return k=>{ const e=eOut(k); o.scale.y=Math.max(.001,e); o.position.y=y0+(oy-y0)*e; }; },
+  drop(o,h=3){ const oy=o.position.y; return k=>{ o.position.y=oy+(1-eOut(k))*h; }; },
+  pop(o){ const s=o.scale.clone(); return k=>{ const e=Math.max(.001,backOut(k)); o.scale.set(s.x*e,s.y*e,s.z*e); }; },
+  up(o,h=.5){ const oy=o.position.y; return k=>{ o.position.y=oy-(1-eOut(k))*h; }; },
+  none(){ return ()=>{}; }
+};
+function bottomOf(o){ o.geometry.computeBoundingBox(); return o.position.y+o.geometry.boundingBox.min.y*o.scale.y; }
+
+/* ---------------- 지형 · 도로 · 물 ---------------- */
+terrainMesh(130,190,0,0,0);
+terrainMesh(1100,220,0,0,65);
+function ribbon(P,hw,yOff,material,widthFn){ const pos=[],idx=[]; for(let i=0;i<P.length;i++){ const a=P[Math.max(0,i-1)], b=P[Math.min(P.length-1,i+1)], dx=b.x-a.x, dz=b.z-a.z, L=Math.hypot(dx,dz)||1, nx=-dz/L, nz=dx/L, w=widthFn?widthFn(i):hw;
+    const y=(P[i].h!==undefined&&P[i].h!==0?P[i].h:H(P[i].x,P[i].z))+yOff; pos.push(P[i].x+nx*w,y,P[i].z+nz*w,P[i].x-nx*w,y,P[i].z-nz*w); if(i>0){ const k=i*2; idx.push(k-2,k-1,k,k-1,k+1,k); } }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setIndex(idx); g.computeVertexNormals(); const m=new THREE.Mesh(g,material); m.receiveShadow=true; scene.add(m); return m; }
+const asphalt=new THREE.MeshStandardMaterial({color:0x4f5254,roughness:.92});
+for(const R of ROADS) ribbon(R.pts,R.hw,.04,asphalt);
+const water=new THREE.MeshStandardMaterial({color:0x58788a,roughness:.15,metalness:.1});
+ribbon(STREAM.map(p=>({x:p.x,z:p.z,h:0})),.9,.0,water).position.y=.3;
+{ const pond=mk(new THREE.BoxGeometry(11,.1,7),water,48,H(48,-32)-.15,-32); pond.rotation.y=.35; }
+
+/* ---------------- 옹벽 · 돌담 · 마을 ---------------- */
+const blockTex=texCanvas(256,128,(x,w,h)=>{ x.fillStyle='#b9b6ae'; x.fillRect(0,0,w,h); for(let r=0;r<4;r++) for(let c=-1;c<4;c++){ const off=(r%2)*32; x.fillStyle=`hsl(40,4%,${66+((r*7+c*3)%5)}%)`; x.fillRect(c*64+off+2,r*32+2,60,28); } });
+const brickTex=texCanvas(256,128,(x,w,h)=>{ x.fillStyle='#d8cfc2'; x.fillRect(0,0,w,h); for(let r=0;r<8;r++) for(let c=-1;c<9;c++){ const off=(r%2)*16; x.fillStyle=`hsl(${10+(r*3+c)%4},${48+(c*7)%10}%,${32+((r*5+c*3)%6)}%)`; x.fillRect(c*32+off+1,r*16+1,30,14); } });
+function wallAlong(a,b,y0,y1,t,material,uvScale=[1,1]){ const L=Math.hypot(b[0]-a[0],b[1]-a[1]), h=y1-y0; const g=boxUV(new THREE.BoxGeometry(L,h,t),L*uvScale[0],h*uvScale[1],t);
+  const m=mk(g,material,(a[0]+b[0])/2,(y0+y1)/2,(a[1]+b[1])/2); m.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0]); return m; }
+const blockMat=new THREE.MeshStandardMaterial({map:blockTex,roughness:.95}); blockTex.repeat.set(1/1.6,1/.8);
+for(const i of [4,5,6]){ const a=PAD[i], b=PAD[(i+1)%PAD.length]; const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2]; const rh=roadNear(mid[0]+(PADC[0]-mid[0])*-.15,mid[1]+(PADC[1]-mid[1])*-.15).h; wallAlong(a,b,Math.min(rh,-.6)-.15,.32,.2,blockMat); }
+// 돌담 (마을 쪽)
+const stoneG=new THREE.DodecahedronGeometry(.36,0), stoneMat=mat('#8a8984',{roughness:1});
+function stoneWall(P,height=1.1){ const items=[]; for(let i=0;i<P.length-1;i++){ const a=P[i], b=P[i+1], L=Math.hypot(b[0]-a[0],b[1]-a[1]); for(let s=0;s<L;s+=.62) for(let r=0;r<Math.round(height/.38);r++){ const t=s/L, x=lerp(a[0],b[0],t)+(rnd()-.5)*.1, z=lerp(a[1],b[1],t)+(rnd()-.5)*.1; items.push([x,z,r]); } }
+  const im=new THREE.InstancedMesh(stoneG,stoneMat,items.length), m4=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler();
+  items.forEach(([x,z,r],i)=>{ e.set(rnd()*3,rnd()*3,rnd()*3); q.setFromEuler(e); const s=.8+rnd()*.45; m4.compose(new THREE.Vector3(x,H(x,z)+.2+r*.36,z),q,new THREE.Vector3(s*1.3,s*.9,s)); im.setMatrixAt(i,m4); });
+  im.castShadow=true; im.receiveShadow=true; scene.add(im); }
+stoneWall([[-15.6,-12],[-15.2,0],[-15.4,9],[-16.8,14.5]]);
+stoneWall([[-10,15.4],[-2,15.5],[6,15.6],[14,14.8]],.8);
+// 붉은 벽돌담 (사진 3: 도로 건너 곡선 벽돌담)
+{ const bm=new THREE.MeshStandardMaterial({map:brickTex,roughness:.9}); brickTex.repeat.set(1,1); const P=[[-17,-14],[-16.8,-6],[-17.2,2],[-18.5,8],[-21,13]];
+  for(let i=0;i<P.length-1;i++){ const y=H(P[i][0],P[i][1]); wallAlong(P[i],P[i+1],y-.2,y+1.7,.25,bm,[1/1.6,1/.8]); } }
+function hipRoof(w,d,h,ov,color){ const W=w/2+ov, D=d/2+ov, r=Math.max(0,W-D*.9); const v=[-W,0,-D, W,0,-D, W,0,D, -W,0,D, -r,h,0, r,h,0];
+  const idx=[0,4,1, 4,5,1, 1,5,2, 2,5,4, 2,4,3, 3,4,0]; const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(v,3)); g.setIndex(idx); g.computeVertexNormals();
+  return new THREE.Mesh(g,mat(color,{side:THREE.DoubleSide})); }
+function gableRoof(w,d,h,ov,color){ const W=w/2+ov, D=d/2+ov; const v=[-W,0,-D, W,0,-D, W,h,0, -W,h,0, W,0,D, -W,0,D]; const idx=[0,3,2, 0,2,1, 5,4,2, 5,2,3, 1,2,4, 0,5,3];
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(v,3)); g.setIndex(idx); g.computeVertexNormals(); return new THREE.Mesh(g,mat(color,{side:THREE.DoubleSide})); }
+const VILLAGE=[[-24,-6,10,6,'hanok',.08],[-26,7,11,6.5,'hanok',-.12],[-33,20,9,6,'blue',-.55],[-28,32,9,6,'hanok',-.5],[-8,23,7.5,5,'white',.04],[6,24,8.5,6,'hanok',.12],[-40,-2,12,7,'hanok',.03],[-37,-16,7,5,'blue',.25],[18,26,6,4,'container',.4],[-22,-24,8,5.5,'hanok',.3]];
+for(const [x,z,w,d,type,ry] of VILLAGE){ const g=new THREE.Group(); const y=Math.min(H(x-w/2,z-d/2),H(x+w/2,z+d/2),H(x,z)); g.position.set(x,y,z); g.rotation.y=ry; scene.add(g);
+  if(type==='container'){ mk(new THREE.BoxGeometry(w,2.6,d),mat('#3f74b8',{flatShading:false,roughness:.6}),0,1.3,0,g); continue; }
+  const bh=type==='hanok'?2.6:2.9; mk(new THREE.BoxGeometry(w,bh,d),mat(type==='hanok'?'#ece6d8':'#f1efe9'),0,bh/2,0,g);
+  if(type==='hanok'){ for(let i=-1;i<=1;i+=2) for(let k=0;k<4;k++) mk(new THREE.BoxGeometry(.18,bh,.18),mat('#6b4a32'),-w/2+.1+k*(w-.2)/3,bh/2,i*(d/2+.02),g); const r=hipRoof(w,d,2.1,1.0,'#40454b'); r.position.y=bh; r.castShadow=true; g.add(r); mk(new THREE.BoxGeometry(w*.55,.25,.35),mat('#2f3337'),0,bh+2.15,0,g); }
+  else if(type==='blue'){ const r=gableRoof(w,d,1.6,.5,'#3a7cc7'); r.position.y=bh; r.castShadow=true; g.add(r); }
+  else { const r=gableRoof(w,d,1.1,.4,'#8b8f93'); r.position.y=bh; r.castShadow=true; g.add(r); } }
+// 제각 대문 + 석주 (사진 1)
+{ const x=-19.5, z=15, y=H(x,z); for(const dz of [-2.2,2.2]){ mk(new THREE.BoxGeometry(.7,2.4,.7),mat('#d8d6cf'),x,y+1.2,z+dz); mk(new THREE.BoxGeometry(.95,.4,.95),mat('#9c9a93'),x,y+2.6,z+dz); } const gate=hipRoof(2.8,2.4,1.2,.4,'#3d4146'); gate.position.set(x-1.6,y+2.7,z); scene.add(gate); }
+// 캐러밴 · 은행나무 (사진 10, 03)
+{ const x=-30, z=-30; const g=new THREE.Group(); g.position.set(x,H(x,z),z); g.rotation.y=.4; scene.add(g); mk(new THREE.BoxGeometry(5.2,2.2,2.2),mat('#f3f2ee',{flatShading:false}),0,1.4,0,g); mk(new THREE.BoxGeometry(1.4,.6,2.25),mat('#c8d4dc'),1.2,1.7,0,g); }
+
+/* ---------------- 나무 ---------------- */
+const coneG=new THREE.ConeGeometry(1,1,6), icoG=new THREE.IcosahedronGeometry(1,0), trunkG=new THREE.CylinderGeometry(.5,.7,1,5);
+function forest(){ const pts=[]; let tries=0; while(pts.length<2400&&tries<20000){ tries++; const a=rnd()*Math.PI*2, r=58+Math.pow(rnd(),.8)*380, x=Math.cos(a)*r, z=Math.sin(a)*r; const t=terrain(x,z); if(t.zone!=='forest'||t.h<4) continue; pts.push([x,t.h,z]); }
+  for(const [geo,frac,col] of [[coneG,.55,0x355f2f],[icoG,.45,0x4c7a3a]]){ const list=pts.filter(()=>rnd()<frac); const im=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({color:0xffffff,flatShading:true,roughness:.95}),list.length);
+    const m4=new THREE.Matrix4(), c=new THREE.Color(); list.forEach(([x,y,z],i)=>{ const s=3+rnd()*4; if(geo===coneG) m4.compose(new THREE.Vector3(x,y+s*.9,z),new THREE.Quaternion(),new THREE.Vector3(s*.55,s*2,s*.55)); else m4.compose(new THREE.Vector3(x,y+s*.7,z),new THREE.Quaternion(),new THREE.Vector3(s*.8,s*.75,s*.8)); im.setMatrixAt(i,m4); c.setHex(col).offsetHSL((rnd()-.5)*.05,0,(rnd()-.5)*.1); im.setColorAt(i,c); });
+    scene.add(im); } }
+forest();
+function tree(x,z,{h=5,crown='#5b8a3f',kind='round',trunk='#5d4634',parent=scene,s=1}={}){ const g=new THREE.Group(); g.position.set(x,H(x,z),z); g.scale.setScalar(s); parent.add(g);
+  const th=kind==='cone'?h*.25:h*.45; const tr=mk(trunkG,mat(trunk),0,th/2,0,g); tr.scale.set(.18,th,.18);
+  if(kind==='cone'){ const c=mk(coneG,mat(crown),0,th+h*.38,0,g); c.scale.set(h*.28,h*.8,h*.28); }
+  else if(kind==='multi'){ for(let i=0;i<4;i++){ const c=mk(icoG,mat(crown),Math.cos(i*1.6)*h*.18,th+h*.18+i*.12,Math.sin(i*1.6)*h*.18,g); c.scale.setScalar(h*.24); } }
+  else { const c=mk(icoG,mat(crown),0,th+h*.25,0,g); c.scale.set(h*.33,h*.3,h*.33); }
+  return g; }
+for(const [x,z,h,c,k] of [[-17.5,19,7,'#5f8f45','round'],[-27,-12,6,'#628c40','round'],[-12,-30,8,'#a9c04e','cone'],[-34,26,6,'#5a8441','round'],[20,-14,4,'#6c9447','round'],[27,9,3.5,'#5e8b42','multi'],[34,30,4,'#5f8b44','round'],[16,40,5,'#6a9246','round'],[-45,12,7,'#4f7b3c','round'],[10,32,4.5,'#6f9a48','round']]) tree(x,z,{h,crown:c,kind:k});
+// 대숲 (사진 3)
+{ const n=260, im=new THREE.InstancedMesh(new THREE.CylinderGeometry(.06,.08,1,4),mat('#7f9a4a'),n), lf=new THREE.InstancedMesh(icoG,mat('#6f8f3e'),n), m4=new THREE.Matrix4();
+  for(let i=0;i<n;i++){ const x=-44+rnd()*16, z=-8+rnd()*26, y=H(x,z), h=7+rnd()*5; m4.compose(new THREE.Vector3(x,y+h/2,z),new THREE.Quaternion(),new THREE.Vector3(1,h,1)); im.setMatrixAt(i,m4); m4.compose(new THREE.Vector3(x,y+h,z),new THREE.Quaternion(),new THREE.Vector3(1.1,1.6,1.1)); lf.setMatrixAt(i,m4); } scene.add(im,lf); }
+// 비닐하우스 (사진 2)
+{ const hm=new THREE.MeshStandardMaterial({color:0xe9eef0,roughness:.35,transparent:true,opacity:.82,side:THREE.DoubleSide}); for(let i=0;i<4;i++){ const x=30+i*7.5, z=33; const geo=new THREE.CylinderGeometry(2.6,2.6,34,10,1,true,0,Math.PI); geo.rotateZ(Math.PI/2); const m=mk(geo,hm,x,H(x,z)-.2,z,scene,false); m.rotation.y=.38; } }
+// 태양광 · 그물 울타리 밭 (사진 10)
+{ const pm=mat('#2f4766',{metalness:.5,roughness:.35,flatShading:false}); for(let r=0;r<5;r++) for(let c=0;c<7;c++){ const x=52+c*4.4, z=-30+r*5.5, y=H(x,z); const p=mk(new THREE.BoxGeometry(4,.06,2.2),pm,x,y+1.6,z,scene,false); p.rotation.set(-.5,.35,0); } }
+
+/* ---------------- 전봇대 · 가로등 · 전선 ---------------- */
+const poles=[[-14.2,-36],[-11,-11.5],[-10.6,12.4,1],[3,12.1],[18,11],[33,17.6],[52,26.5]];
+const poleTop=[];
+const nightLights=[];
+for(const [x,z,lamp] of poles){ const y=H(x,z); const g=new THREE.Group(); g.position.set(x,y,z); scene.add(g);
+  mk(new THREE.CylinderGeometry(.13,.19,10,8),mat('#c9c6bd',{flatShading:false}),0,5,0,g); mk(new THREE.BoxGeometry(1.8,.12,.12),mat('#5a5f63'),0,9.3,0,g);
+  if(lamp){ const sl=mk(new THREE.CylinderGeometry(.2,.2,1.6,8),mat('#e5c23a',{flatShading:false}),0,1.2,0,g); for(let i=0;i<4;i++) mk(new THREE.CylinderGeometry(.205,.205,.18,8),mat('#1b1b1b'),0,.6+i*.4,0,g);
+    const arm=mk(new THREE.BoxGeometry(2.2,.08,.08),mat('#9aa0a4'),1.1,7.2,0,g); arm.rotation.z=.12; const head=mk(new THREE.BoxGeometry(.6,.14,.28),mat('#e8e6dd',{emissive:0xffd59a,emissiveIntensity:0}),2.15,7.33,0,g); nightLights.push(head);
+    const pl=new THREE.PointLight(0xffd29a,0,22,1.6); pl.position.set(2.15,7.1,0); g.add(pl); nightLights.push(pl); g.rotation.y=Math.PI*.95; }
+  poleTop.push(new THREE.Vector3(x,y+9.3,z)); }
+function wire(a,b,sag=.6){ const pts=[]; for(let i=0;i<=16;i++){ const t=i/16; const p=a.clone().lerp(b,t); p.y-=Math.sin(t*Math.PI)*sag; pts.push(p); } const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x222222})); scene.add(l); return l; }
+for(let i=0;i<poleTop.length-1;i++) for(const o of [-.75,0,.75]){ wire(poleTop[i].clone().add(new THREE.Vector3(0,0,o)),poleTop[i+1].clone().add(new THREE.Vector3(0,0,o))); }
+
+/* ---------------- 구름 ---------------- */
+const clouds=[]; { const cm=new THREE.MeshStandardMaterial({color:0xffffff,flatShading:true,roughness:1,transparent:true,opacity:.95,fog:false});
+  for(let i=0;i<14;i++){ const g=new THREE.Group(); const a=rnd()*Math.PI*2, r=180+rnd()*420; g.position.set(Math.cos(a)*r,90+rnd()*70,Math.sin(a)*r); for(let k=0;k<5;k++){ const m=new THREE.Mesh(icoG,cm); m.position.set((k-2)*9+rnd()*4,rnd()*4,rnd()*6); m.scale.setScalar(8+rnd()*8); g.add(m); } g.scale.set(1.4,.6,1); scene.add(g); clouds.push(g); } }
+
+/* =====================================================================
+   집 (설계안 재사용) — 집 로컬 +z(평면 정면) → 동(+X), +x(평면 x) → 북(−Z)
+   ===================================================================== */
+const SLAB_TOP=.25;
+const M=houseMaterials();
+const houseG=new THREE.Group(); houseG.rotation.y=Math.PI/2; houseG.position.set(0,SLAB_TOP,0); scene.add(houseG);
+const house=buildHouse(S,{doorOpen:.12}); houseG.add(house);
+const HP=house.userData.parts; HP.base.visible=false;
+const me=S.meta, W=me.W/1000, D=me.D/1000;
+const toW=(lx,ly,lz)=>new THREE.Vector3(lz,ly+SLAB_TOP,-lx);  // 집 로컬 → 월드
+
+// --- 0단계: 야적 자재
+const yard0=new THREE.Group(); scene.add(yard0);
+{ const mound=mk(new THREE.ConeGeometry(2.6,1.5,7),mat('#a97b4d'),10.5,.6,-7.5,yard0); mound.scale.z=.8;
+  for(let i=0;i<9;i++){ const p=mk(new THREE.CylinderGeometry(.025,.025,6,6),mat('#a9adb0',{metalness:.6,flatShading:false}),8+((i%3)-1)*.06,.06+Math.floor(i/3)*.05,4.6+(i%3)*.06,yard0); p.rotation.x=Math.PI/2; p.rotation.y=.2; }
+  for(let i=0;i<10;i++) mk(new THREE.BoxGeometry(.2,.06,.1),mat('#c9c6bf'),9.4+(i%5)*.22,.03+Math.floor(i/5)*.06,6.8,yard0);
+  const cp=mk(new THREE.CylinderGeometry(.35,.35,2.4,14,1,true),mat('#1d1f22',{side:THREE.DoubleSide}),9.8,.2,9.1,yard0); cp.rotation.set(Math.PI/2,0,.5);
+  reg(0,yard0,A.none(),{until:5}); }
+
+// --- 1단계: 형틀 · 단열 · 철근 · 슬리브
+const formTex=texCanvas(64,64,(x,w,h)=>{ x.fillStyle='#4b3a2e'; x.fillRect(0,0,w,h); x.fillStyle='#6b4e36'; x.fillRect(0,0,w,4); x.fillRect(0,h-4,w,4); x.fillRect(0,0,4,h); x.fillRect(w-4,0,4,h); x.fillRect(0,h/2-2,w,4); });
+const formMat=new THREE.MeshStandardMaterial({map:formTex,roughness:.7,metalness:.3});
+const FX=D/2+.06, FZ=W/2+.06;  // 월드: 집 깊이(4.5) = X, 길이(8) = Z
+{ let idx=0; const sides=[[[-FX,-FZ],[FX,-FZ]],[[FX,-FZ],[FX,FZ]],[[FX,FZ],[-FX,FZ]],[[-FX,FZ],[-FX,-FZ]]];
+  for(const [a,b] of sides){ const L=Math.hypot(b[0]-a[0],b[1]-a[1]), n=Math.ceil(L/.6);
+    for(let i=0;i<n;i++){ const t=(i+.5)/n, x=lerp(a[0],b[0],t), z=lerp(a[1],b[1],t); const p=mk(new THREE.BoxGeometry(L/n-.01,.6,.05),formMat,x,.25,z); p.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0]); reg(1,p,A.up(p,.66),{until:2,delay:idx*.035,dur:.5}); idx++; }
+    for(const yy of [.12,.42]){ const pipe=mk(new THREE.CylinderGeometry(.024,.024,L+.3,6),mat('#b6babd',{metalness:.7,flatShading:false}),(a[0]+b[0])/2,yy,(a[1]+b[1])/2); pipe.rotation.z=Math.PI/2; pipe.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0]);
+      const sgn=Math.sign((a[0]+b[0])/2)||0, sgz=Math.sign((a[1]+b[1])/2)||0; pipe.position.x+=sgn*.06; pipe.position.z+=sgz*.06; reg(1,pipe,A.pop(pipe),{until:2,delay:1.7+yy,dur:.5}); } }
+  for(const [x,z] of [[-FX,-FZ],[FX,-FZ],[FX,FZ],[-FX,FZ]]){ const p=mk(new THREE.BoxGeometry(.18,1.25,.18),formMat,x,.55,z); reg(1,p,A.up(p,1.3),{until:2,delay:.1,dur:.6}); } }
+{ const film=mk(new THREE.PlaneGeometry(D-.1,W-.1),new THREE.MeshStandardMaterial({color:0xe8eef2,transparent:true,opacity:.55,roughness:.2}),0,.02,0); film.rotation.x=-Math.PI/2; reg(1,film,A.none(),{until:1,delay:.9});
+  const bm=mat('#7f8b98',{flatShading:false,roughness:.8}); let k=0; for(let i=0;i<4;i++) for(let j=0;j<7;j++){ const b=mk(new THREE.BoxGeometry(1.08,.05,1.1),bm,-D/2+.6+i*1.1,.05,-W/2+.6+j*1.14); reg(1,b,A.drop(b,1.5),{until:1,delay:1.0+k*.025,dur:.4}); k++; }
+  const nx=Math.floor(W/.2), nz=Math.floor(D/.2), rb=new THREE.InstancedMesh(new THREE.BoxGeometry(1,.014,.014),mat('#8a4b2a',{metalness:.4}),nx+nz), m4=new THREE.Matrix4();
+  for(let i=0;i<nx;i++){ m4.compose(new THREE.Vector3(0,.14,-W/2+.1+i*.2),new THREE.Quaternion(),new THREE.Vector3(D-.15,1,1)); rb.setMatrixAt(i,m4); }
+  const qy=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
+  for(let i=0;i<nz;i++){ m4.compose(new THREE.Vector3(-D/2+.1+i*.2,.155,0),qy,new THREE.Vector3(W-.15,1,1)); rb.setMatrixAt(nx+i,m4); }
+  scene.add(rb); const total=nx+nz; reg(1,rb,k=>{ rb.count=Math.max(1,Math.floor(total*clamp(k))); },{until:2,delay:1.8,dur:1.4});
+  for(const [lx,lz,h] of [[-1.1,-1.6,.9],[-1.45,-1.6,.7],[-.6,-2.9,.8],[1.4,-2.7,.75],[1.1,-3.2,.6],[-1.8,.4,.6],[.3,-2.4,.7]]){ const p=mk(new THREE.CylinderGeometry(.055,.055,h,10),mat('#f2f2ef',{flatShading:false}),lx,h/2,lz); const cap=mk(new THREE.CylinderGeometry(.06,.06,.06,10),mat('#2f9c74'),lx,h,lz); reg(1,p,A.rise(p,0),{until:2,delay:2.6,dur:.5}); reg(1,cap,A.pop(cap),{until:2,delay:3.0,dur:.4}); } }
+
+// --- 2단계: 타설 슬래브 + 레미콘
+const slabMat=new THREE.MeshStandardMaterial({color:0x76736d,roughness:.9});
+const slab=mk(new THREE.BoxGeometry(D,.5,W).translate(0,.25,0),slabMat,0,SLAB_TOP-.5,0);
+reg(2,slab,k=>{ const e=eOut(k); slab.scale.y=Math.max(.02,e); slabMat.color.setHex(0x6b6863).lerp(new THREE.Color(0xb9b6af),cur>2?1:clamp(k*1.2-.2)); },{delay:.6,dur:2.4});
+const truck=new THREE.Group(); { const rp=ROADS[1].pts[38]; truck.position.set(rp.x,rp.h+.05,rp.z); truck.rotation.y=-.1; scene.add(truck);
+  mk(new THREE.BoxGeometry(6.6,.5,2.3),mat('#3a3d40'),0,.85,0,truck); mk(new THREE.BoxGeometry(1.7,1.8,2.3),mat('#e9e6df'),2.6,1.9,0,truck); mk(new THREE.BoxGeometry(.05,.8,2),mat('#2a3a48',{metalness:.5}),3.46,2.2,0,truck);
+  for(const [x,z] of [[2.4,1.15],[2.4,-1.15],[-1,1.15],[-1,-1.15],[-2.2,1.15],[-2.2,-1.15]]){ const w=mk(new THREE.CylinderGeometry(.48,.48,.36,12),mat('#1c1c1c'),x,.48,z,truck); w.rotation.x=Math.PI/2; }
+  const drum=new THREE.Group(); drum.position.set(-.8,2.15,0); drum.rotation.z=.22; truck.add(drum); const dm=mk(new THREE.CylinderGeometry(.9,1.25,3.6,10),mat('#f0a43a'),0,0,0,drum); dm.rotation.z=Math.PI/2;
+  for(let i=0;i<5;i++){ const s=mk(new THREE.BoxGeometry(3.4,.1,.12),mat('#c76e2a'),0,.95*Math.cos(i*1.25),.95*Math.sin(i*1.25),drum); } truck.userData.drum=drum;
+  const hoseCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-3.2,1.5,0).applyMatrix4(new THREE.Matrix4().makeRotationY(-.1)).add(truck.position),new THREE.Vector3(-1,4.5,8),new THREE.Vector3(.5,3.2,3),new THREE.Vector3(.2,.7,.5)]);
+  const hose=new THREE.Mesh(new THREE.TubeGeometry(hoseCurve,40,.07,6),mat('#e2702f')); hose.castShadow=true; scene.add(hose); reg(2,hose,A.none(),{until:2});
+  reg(2,truck,k=>{ truck.position.x=rp.x+(1-eOut(k))*-14; },{until:2,dur:1}); }
+
+// --- 3단계: 벽체 (판넬)
+function wallItems(group,stage,base){ const list=[]; group.traverse(o=>{ if(o.isMesh&&o.parent===group) list.push(o); });
+  list.forEach(o=>{ const p=o.getWorldPosition(new THREE.Vector3()); const ang=Math.atan2(p.z,p.x); const y0=bottomOf(o); reg(stage,o,A.rise(o,y0),{delay:base+(ang+Math.PI)/(2*Math.PI)*1.1+(y0>1?1.0:0),dur:.9}); }); }
+wallItems(HP.f1,3,0); wallItems(HP.shell,3,.3);
+const panelStack=new THREE.Group(); scene.add(panelStack); for(let i=0;i<8;i++) mk(new THREE.BoxGeometry(1.0,.18,4.2),mat(i%2?'#d9dcdc':'#c9cdcf'),7.6,.09+i*.18,-6.5,panelStack); reg(3,panelStack,A.none(),{until:3});
+let skinZinc=null;
+function setSkin(z){ if(skinZinc===z) return; skinZinc=z; for(const m of house.userData.wallMeshes){ const u=m.userData.wall; if(!u||!u.ext) continue; if(u.gable){ m.material=[z?M.zinc:M.panelRaw,M.edge]; } else { const arr=m.material.slice(); arr[u.outIdx]=z?M.zinc:M.panelRaw; m.material=arr; } } }
+
+// --- 4단계: 다락 바닥 · 계단 · 서까래 · 비계
+reg(4,HP.attic,A.drop(HP.attic,2.2),{delay:0,dur:.8});
+reg(4,HP.stair,A.drop(HP.stair,1.5),{delay:.5,dur:.8});
+const rafters=new THREE.Group(); house.add(rafters);
+{ const R=HP.roof.userData, eave=me.eave/1000, ridge=me.ridge/1000, wood=mat('#c79a62');
+  const beam=mk(new THREE.BoxGeometry(R.RL,.22,.09),wood,0,ridge-.11,0,rafters); reg(4,beam,A.drop(beam,3),{delay:.9,dur:.6});
+  let i=0; for(let x=-R.RL/2+.15;x<=R.RL/2-.1;x+=.6){ for(const s of [-1,1]){ const a=s*R.pitch, zm=s*(R.run+R.ov)/2, ym=(ridge+eave-R.ov*Math.tan(R.pitch))/2, ny=Math.cos(a), nz=Math.sin(a);
+      const r=mk(new THREE.BoxGeometry(.05,.18,R.slope),wood,x,ym-ny*.09,zm-nz*.09,rafters); r.rotation.x=a; reg(4,r,A.drop(r,2.5),{delay:1.3+i*.06,dur:.45}); } i++; } }
+const scaff=new THREE.Group(); scene.add(scaff);
+{ const pm=mat('#9ca3a8',{metalness:.6,flatShading:false}), plank=mat('#b98b52'); const ox=D/2+.9, oz=W/2+.9; let k=0;
+  const ring=[]; for(let z=-oz;z<=oz+.01;z+=1.8) ring.push([ox,z],[-ox,z]); for(let x=-ox+1.5;x<ox;x+=1.5) ring.push([x,oz],[x,-oz]);
+  for(const [x,z] of ring){ const p=mk(new THREE.CylinderGeometry(.03,.03,5.2,6),pm,x,2.6,z,scaff); reg(4,p,A.rise(p,0),{until:5,delay:.2+k*.02,dur:.5}); k++; }
+  for(const y of [1.2,2.6,4.0]) for(const s of [-1,1]){ const a=mk(new THREE.CylinderGeometry(.025,.025,oz*2,6),pm,s*ox,y,0,scaff); a.rotation.x=Math.PI/2; reg(4,a,A.pop(a),{until:5,delay:1.2+y*.15,dur:.4});
+      const b=mk(new THREE.CylinderGeometry(.025,.025,ox*2,6),pm,0,y,s*oz,scaff); b.rotation.z=Math.PI/2; reg(4,b,A.pop(b),{until:5,delay:1.2+y*.15,dur:.4});
+      const pl=mk(new THREE.BoxGeometry(.4,.04,oz*2),plank,s*(ox-.25),y+.03,0,scaff); reg(4,pl,A.pop(pl),{until:5,delay:1.5+y*.15,dur:.4}); } }
+
+// --- 5단계: 지붕 마감
+{ const plates=HP.roof.children.filter(o=>o.userData.roof), rest=HP.roof.children.filter(o=>!o.userData.roof);
+  plates.forEach((p,i)=>{ const oy=p.position.y; reg(5,p,k=>{ const e=eOut(k); p.position.y=oy+(1-e)*2.4; p.scale.x=Math.max(.02,e); },{delay:.2+i*.5,dur:1.1}); });
+  rest.forEach((p,i)=>reg(5,p,A.pop(p),{delay:1.6+i*.15,dur:.5})); }
+
+// --- 6단계: 창호 · 데크 · 마감 · 증축 · 조경
+HP.open.children.forEach((g,i)=>reg(6,g,A.pop(g),{delay:.1+i*.06,dur:.45}));
+reg(6,HP.decks,A.up(HP.decks,.5),{delay:.6,dur:.8});
+reg(6,HP.floor,A.none(),{delay:.3}); reg(6,HP.rails,A.none(),{delay:.5});
+const furnG=new THREE.Group(); house.add(furnG); for(const f of S.furniture) furnG.add(furnMesh(f,S)); reg(6,furnG,A.none(),{delay:.8});
+// 다락방 증축 3,000 × 3,300 (북측, 지붕 참고도면의 11,000 = 8,000 + 3,000)
+const annex=new THREE.Group(); house.add(annex);
+{ const ax0=W/2, aw=3.0, ad=3.3+.2, ah=2.6, rid=3.9, cx=ax0+aw/2;
+  mk(new THREE.BoxGeometry(aw,.45,ad).translate(0,-.2,0),M.conc,cx,0,0,annex);
+  const zm=M.zinc, walls=[[aw,ah,.18,cx,ah/2,ad/2-.09],[aw,ah,.18,cx,ah/2,-ad/2+.09],[.18,ah,ad,ax0+aw-.09,ah/2,0]];
+  for(const [sx,sy,sz,x,y,z] of walls){ mk(boxUV(new THREE.BoxGeometry(sx,sy,sz),sx,sy,sz),[zm,zm,M.edge,M.edge,zm,zm],x,y,z,annex); }
+  const sh=new THREE.Shape(); sh.moveTo(-ad/2,0); sh.lineTo(ad/2,0); sh.lineTo(0,rid-ah); sh.closePath(); const gg=new THREE.ExtrudeGeometry(sh,{depth:.18,bevelEnabled:false}); gg.rotateY(Math.PI/2); mk(gg,[zm,M.edge],ax0+aw-.18,ah,0,annex);
+  const pitch=Math.atan2(rid-ah,ad/2), ov=.4, sl=(ad/2+ov)/Math.cos(pitch);
+  for(const s of [-1,1]){ const r=mk(boxUV(new THREE.BoxGeometry(aw+.4,.14,sl),aw+.4,.14,sl),[M.trim,M.trim,M.shingle,M.soffit,M.trim,M.trim],cx+.2,(rid+ah-ov*Math.tan(pitch))/2+.07,s*(ad/2+ov)/2,annex); r.rotation.x=s*pitch; }
+  const win=(x,y,z,w,h,ry)=>{ const g=new THREE.Group(); g.position.set(x,y,z); g.rotation.y=ry; annex.add(g); mk(new THREE.BoxGeometry(w+.1,h+.1,.06),M.frame,0,0,0,g); const gl=new THREE.Mesh(new THREE.PlaneGeometry(w,h),M.glass); gl.position.z=.04; g.add(gl); };
+  win(cx,1.5,ad/2+.01,1.4,1.0,0); win(ax0+aw+.01,1.5,0,.9,.9,Math.PI/2);
+  reg(6,annex,A.rise(annex,0),{delay:1.0,dur:1.3}); }
+
+// 조경 그룹
+const land=new THREE.Group(); scene.add(land);
+const HOUSE_HOLE=[[-3.85,4.6],[4.85,4.6],[4.85,-4.6],[2.35,-4.6],[2.35,-7.6],[-2.35,-7.6],[-2.35,-4.6],[-3.85,-4.6]]; // 월드 X,Z (집+데크+증축+쇄석띠)
+const PARK=[[-8.7,3.4],[-4.8,3.4],[-4.8,10.45],[-8.85,10.25]];
+const PLAZA=[[-1.6,6.2],[.8,6.2],[.8,8.6],[-1.6,8.6]];
+function shapeXZ(P,holes=[]){ const s=new THREE.Shape(P.map(p=>new THREE.Vector2(p[0],-p[1]))); for(const h of holes) s.holes.push(new THREE.Path(h.map(p=>new THREE.Vector2(p[0],-p[1])))); const g=new THREE.ShapeGeometry(s); g.rotateX(-Math.PI/2); return g; }
+function insetPoly(P,d){ return P.map((p,i)=>{ const a=P[(i-1+P.length)%P.length], b=P[(i+1)%P.length]; const v=[PADC[0]-p[0],PADC[1]-p[1]], L=Math.hypot(v[0],v[1]); return [p[0]+v[0]/L*d,p[1]+v[1]/L*d]; }); }
+const lawnTex=texCanvas(128,128,(x,w,h)=>{ x.fillStyle='#6f9a45'; x.fillRect(0,0,w,h); for(let i=0;i<1400;i++){ x.fillStyle=`hsl(${85+Math.random()*20},${40+Math.random()*20}%,${30+Math.random()*16}%)`; x.fillRect(Math.random()*w,Math.random()*h,1,3); } });
+lawnTex.repeat.set(.4,.4);
+const lawnMat=new THREE.MeshStandardMaterial({map:lawnTex,roughness:1});
+const lawn=mk(shapeXZ(insetPoly(PAD,.35),[HOUSE_HOLE,PARK,PLAZA]),lawnMat,0,.035,0,land,false); { const uv=lawn.geometry.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i),uv.getY(i)); }
+reg(6,lawn,A.up(lawn,.08),{delay:.2,dur:1.0});
+const gravel=mk(shapeXZ(HOUSE_HOLE),mat('#a9a69e',{flatShading:false,roughness:1}),0,.03,0,land,false); reg(6,gravel,A.none(),{delay:.2});
+const conc=mk(shapeXZ(PARK),new THREE.MeshStandardMaterial({color:0xbdbab3,roughness:.95}),0,.05,0,land,false); reg(6,conc,A.up(conc,.1),{delay:.3,dur:.8});
+{ const joints=new THREE.Group(); land.add(joints); for(let z=4.4;z<10.4;z+=1.5) mk(new THREE.BoxGeometry(3.9,.012,.02),mat('#8e8b85'),-6.8,.06,z,joints,false); reg(6,joints,A.none(),{delay:1.1}); }
+const plaza=mk(shapeXZ(PLAZA),mat('#cfcac0',{flatShading:false}),0,.055,0,land,false); reg(6,plaza,A.up(plaza,.1),{delay:.4});
+// 디딤돌 (잔디 사이)
+function stones(path,gap=.62){ for(let i=0;i<path.length-1;i++){ const a=path[i], b=path[i+1], L=Math.hypot(b[0]-a[0],b[1]-a[1]); for(let s=0;s<L;s+=gap){ const t=s/L, x=lerp(a[0],b[0],t)+(rnd()-.5)*.12, z=lerp(a[1],b[1],t)+(rnd()-.5)*.12;
+  const st=mk(new THREE.CylinderGeometry(.27+rnd()*.06,.3,.06,6+Math.floor(rnd()*3)),mat('#c2bdb3'),x,.055,z,land); st.rotation.y=rnd()*3; st.scale.z=.8+rnd()*.3; reg(6,st,A.pop(st),{delay:1.0+s*.03+i*.2,dur:.35}); } } }
+stones([[4.6,3.6],[3.4,5.6],[1.0,6.1]]);
+stones([[-4.6,6.5],[-2.6,6.0],[-1.8,6.3]]);
+stones([[-4.6,4.2],[-4.2,3.0],[-3.9,1.9]]);
+stones([[4.6,-1.5],[7.5,-2.0],[10.5,-1.0],[12.2,.6]]);
+// 벤치 (논 조망)
+{ const b=new THREE.Group(); b.position.set(12.4,.04,1.6); land.add(b); mk(new THREE.BoxGeometry(.45,.06,1.6),mat('#9b7349'),0,.45,0,b); for(const z of [-.65,.65]) mk(new THREE.BoxGeometry(.4,.45,.08),mat('#3c3f42'),0,.22,z,b); reg(6,b,A.pop(b),{delay:2.2}); }
+// 비석 + 주목 2주
+const bi=new THREE.Group(); bi.position.set(-.4,.06,7.4); land.add(bi);
+{ mk(new THREE.BoxGeometry(.7,.32,1.15),mat('#8c8a85'),0,.16,0,bi); mk(new THREE.BoxGeometry(.24,1.15,.6),mat('#2c2e31',{flatShading:false,roughness:.3,metalness:.2}),0,.9,0,bi); const cap=mk(new THREE.BoxGeometry(.32,.12,.7),mat('#2c2e31',{flatShading:false,roughness:.3}),0,1.53,0,bi);
+  reg(6,bi,A.rise(bi,.06),{delay:1.2,dur:1.0});
+  for(const dz of [-1.0,1.0]){ const y=tree(-.4,7.4+dz,{h:1.15,crown:'#2f5a35',kind:'cone',trunk:'#5a3a2a',parent:land}); reg(6,y,A.pop(y),{delay:1.7,dur:.6}); } }
+// 담장
+const brickMat=new THREE.MeshStandardMaterial({map:brickTex,roughness:.9}); const fenceMat=mat('#8b6a48'), postMat=mat('#5e4631');
+const perim={brick:0,fence:0,hedge:0};
+function segOf(i){ return [PAD[i],PAD[(i+1)%PAD.length]]; }
+let dl=0;
+for(const i of [4,5,6]){ let [a,b]=segOf(i); const parts=i===4?[[a,[-4.55,lerp(a[1],b[1],(a[0]+4.55)/(a[0]-b[0]))]],[[-8.65,lerp(a[1],b[1],(a[0]+8.65)/(a[0]-b[0]))],b]]:[[a,b]];
+  for(const [p,q] of parts){ const L=Math.hypot(q[0]-p[0],q[1]-p[1]); perim.brick+=L; const n=Math.max(1,Math.round(L/2.4));
+    for(let k=0;k<n;k++){ const t0=k/n, t1=(k+1)/n, pa=[lerp(p[0],q[0],t0),lerp(p[1],q[1],t0)], pb=[lerp(p[0],q[0],t1),lerp(p[1],q[1],t1)];
+      const w=wallAlong(pa,pb,.32,1.2,.2,brickMat,[1/1.6,1/.8]); land.add(w); reg(6,w,A.rise(w,.32),{delay:.5+dl*.04,dur:.5}); dl++;
+      const cp=wallAlong(pa,pb,1.2,1.26,.26,mat('#9a958c')); land.add(cp); reg(6,cp,A.pop(cp),{delay:.9+dl*.04,dur:.3}); } } }
+for(const i of [2,3]){ const [a,b]=segOf(i), L=Math.hypot(b[0]-a[0],b[1]-a[1]); perim.fence+=L; const ry=-Math.atan2(b[1]-a[1],b[0]-a[0]);
+  const n=Math.ceil(L/1.8); for(let k=0;k<=n;k++){ const t=k/n, x=lerp(a[0],b[0],t), z=lerp(a[1],b[1],t); const p=mk(new THREE.BoxGeometry(.1,1.0,.1),postMat,x,.5,z,land); reg(6,p,A.rise(p,0),{delay:.6+k*.04,dur:.4}); }
+  for(const y of [.25,.85]){ const r=wallAlong(a,b,y-.035,y+.035,.05,fenceMat); land.add(r); reg(6,r,A.pop(r),{delay:1.3,dur:.5}); }
+  const ns=Math.floor(L/.16), im=new THREE.InstancedMesh(new THREE.BoxGeometry(.07,.78,.02),fenceMat,ns), m4=new THREE.Matrix4(), q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),ry);
+  for(let k=0;k<ns;k++){ const t=(k+.5)/ns; m4.compose(new THREE.Vector3(lerp(a[0],b[0],t),.55,lerp(a[1],b[1],t)),q,new THREE.Vector3(1,1,1)); im.setMatrixAt(k,m4); } im.castShadow=true; land.add(im); reg(6,im,k=>{ im.count=Math.max(1,Math.floor(ns*clamp(k))); },{delay:1.5,dur:1.0}); }
+{ const tea=mat('#2f5c33'); for(const i of [0,1]){ const [a,b]=segOf(i), L=Math.hypot(b[0]-a[0],b[1]-a[1]); perim.hedge+=L; for(let s=.4;s<L-.2;s+=.55){ const [x,z]=edgePt(i,s/L,.45); const hb=mk(icoG,tea,x,.45,z,land); hb.scale.set(.42+rnd()*.08,.5,.42+rnd()*.08); reg(6,hb,A.pop(hb),{delay:.8+s*.05,dur:.45}); } } }
+// 유실수·화목
+const PLANTS=[['체리나무',1,.5,1.6,{h:4.2,crown:'#7f9a49',kind:'round'}],['체리나무',2,.2,1.5,{h:4,crown:'#8a9a48',kind:'round'}],['산수유',2,.55,1.4,{h:3.2,crown:'#a3a845',kind:'multi'}],['산수유',1,.15,1.5,{h:3,crown:'#9ea644',kind:'multi'}],
+  ['라일락',2,.85,1.3,{h:2.6,crown:'#6d9a55',kind:'multi'}],['라일락',6,.55,1.5,{h:2.6,crown:'#6a9853',kind:'multi'}],['비파나무',3,.72,1.5,{h:3.4,crown:'#2f5d34',kind:'round'}],['무화과',3,.32,1.5,{h:2.8,crown:'#6f9b47',kind:'multi'}],['무화과',4,.12,1.4,{h:2.6,crown:'#739f49',kind:'multi'}]];
+const plantSpots=[];
+PLANTS.forEach(([name,e,t,ins,o],i)=>{ const [x,z]=edgePt(e,t,ins); const g=tree(x,z,Object.assign({parent:land},o)); g.position.y=.04; reg(6,g,A.pop(g),{delay:1.6+i*.12,dur:.7}); plantSpots.push([name,x,z,o.h]);
+  if(name==='산수유'){ for(let k=0;k<12;k++){ const f=mk(new THREE.SphereGeometry(.05,5,4),mat('#c3262b'),(rnd()-.5)*1.4,o.h*.6+(rnd()-.5)*.8,(rnd()-.5)*1.4,g,false); } } });
+// 인입선 (전봇대 → 집)
+{ const a=poleTop[3].clone().add(new THREE.Vector3(0,-1.2,0)), b=toW(-W/2+.2,me.eave/1000-.3,-D/2-.05); const l=wire(a,b,.5); reg(6,l,A.none(),{delay:2.4}); }
+// 실내 조명 (밤)
+const indoor=new THREE.PointLight(0xffc98a,0,14,1.5); indoor.position.copy(toW(0,2.1,0)); scene.add(indoor);
+
+/* ---------------- 라벨 ---------------- */
+const LABELS=[
+  {t:'유로폼 형틀 H600',p:[D/2+.2,.9,-W/2-.2],s:[1,1]},{t:'PVC 오·배수 슬리브',p:[-1.1,1.1,-1.6],s:[1,2]},{t:'철근 D10@200',p:[0,.6,1.4],s:[1,1]},
+  {t:'레미콘 · 펌프 타설',p:[0,3,13],s:[2,2]},{t:'T180 징크판넬 외벽',p:[D/2+.1,3.4,-1],s:[3,3]},{t:'박공벽 (남·북)',p:[0,4.9,W/2+.3],s:[3,4]},
+  {t:'서까래 @600 · 용마루',p:[0,5.95,-1.5],s:[4,4]},{t:'비계',p:[D/2+.9,5.4,W/2+.9],s:[4,5]},{t:'슁글 지붕 · 처마 600',p:[1.5,5.6,0],s:[5,5]},
+  {t:'다락방 증축 3,000×3,300',p:[0,4.4,-W/2-1.6],s:[6,6]},{t:'앞 데크 (동향 정면)',p:[D/2+1.2,1.0,0],s:[6,6]},{t:'후문 · 뒤 데크',p:[-D/2-.8,2.3,1.4],s:[6,6]},
+  {t:'비석',p:[-.4,1.9,7.4],s:[6,6]},{t:'주목 2주',p:[-.4,1.4,8.5],s:[6,6]},{t:'벽돌 담장 H1.2',p:[-9.4,1.6,-6],s:[6,6]},{t:'투시형 목재 펜스 H1.0',p:[14.3,1.4,-1],s:[6,6]},
+  {t:'녹차나무 생울타리',p:[-1,1.2,-13.2],s:[6,6]},{t:'콘크리트 주차·진입',p:[-6.8,.7,7.4],s:[6,6]},{t:'디딤돌 + 잔디 마당',p:[8,.7,-1.6],s:[6,6]},{t:'쇄석 배수띠 0.6m',p:[2.6,.6,-4.3],s:[6,6]},
+  {t:'노장길',p:[-12.3,.4,-20],s:[0,6]},{t:'논 (벼 익는 중)',p:[30,-.4,-6],s:[0,6]},{t:'개울',p:[24.5,-.6,2],s:[0,6]},{t:'블록 옹벽 (기존)',p:[-10.4,.9,4],s:[0,5]}
+].concat(plantSpots.map(([n,x,z,h])=>({t:n,p:[x,h+.5,z],s:[6,6]})));
+const labelEls=LABELS.map(L=>{ const d=document.createElement('div'); d.textContent=L.t; $('#labels').appendChild(d); return d; });
+let labelsOn=true;
+const _v=new THREE.Vector3();
+function updateLabels(){ const w=innerWidth, h=innerHeight; LABELS.forEach((L,i)=>{ const el=labelEls[i]; const show=labelsOn&&!cine&&!fp&&cur>=L.s[0]&&cur<=L.s[1]&&(animT>.6||L.s[0]<cur);
+  if(!show){ el.style.display='none'; return; } _v.set(...L.p).project(camera); if(_v.z>1||Math.abs(_v.x)>1.1||Math.abs(_v.y)>1.1){ el.style.display='none'; return; }
+  el.style.display='block'; el.style.left=((_v.x+1)/2*w)+'px'; el.style.top=((1-_v.y)/2*h-10)+'px'; }); }
+
+/* ---------------- 시간대 (태양 궤적: 위도 34.8°, 10월 초) ---------------- */
+const SKY_KF=[[-10,0x060b1e,0x1a1f3c],[-2,0x1d3264,0xcf6a46],[3,0x3a5e9c,0xf0a062],[10,0x4d84c7,0xf2cf9f],[25,0x3a7acf,0xcfe0f0],[90,0x2e6dc6,0xc6dcef]];
+const _c1=new THREE.Color(), _c2=new THREE.Color();
+function skyAt(e){ for(let i=0;i<SKY_KF.length-1;i++){ const a=SKY_KF[i], b=SKY_KF[i+1]; if(e<=b[0]||i===SKY_KF.length-2){ const t=clamp((e-a[0])/(b[0]-a[0])); return [_c1.setHex(a[1]).lerp(new THREE.Color(b[1]),t).clone(),_c2.setHex(a[2]).lerp(new THREE.Color(b[2]),t).clone()]; } } }
+function sunAt(hr){ const lat=34.78*D2R, dec=-4.3*D2R, Hh=(hr-12.4)*15*D2R; const el=Math.asin(Math.sin(lat)*Math.sin(dec)+Math.cos(lat)*Math.cos(dec)*Math.cos(Hh));
+  const az=Math.atan2(Math.sin(Hh),Math.cos(Hh)*Math.sin(lat)-Math.tan(dec)*Math.cos(lat))+Math.PI; return {el,az,dir:new THREE.Vector3(Math.sin(az)*Math.cos(el),Math.sin(el),-Math.cos(az)*Math.cos(el))}; }
+let hour=15.3, night=0;
+function setTime(hr){ hour=hr; const s=sunAt(hr), e=s.el/D2R; const lit=sstep(-1.5,8,e), low=1-sstep(4,30,e);
+  sun.position.copy(SUN_T).addScaledVector(s.dir,150); sun.intensity=3.1*lit; sun.color.setHex(0xfff3e0).lerp(new THREE.Color(0xff9447),low*.85);
+  const [top,hor]=skyAt(e); skyU.top.value.copy(top); skyU.hor.value.copy(hor); skyU.sunDir.value.copy(s.dir); skyU.sunCol.value.copy(sun.color).multiplyScalar(lit);
+  skyU.bot.value.setHex(0x5d6b4e).multiplyScalar(.25+.75*sstep(-6,15,e)); scene.fog.color.copy(hor);
+  hemi.intensity=.15+.95*sstep(-6,18,e); hemi.color.copy(top).lerp(new THREE.Color(0xffffff),.45); hemi.groundColor.setHex(0x6d6248).multiplyScalar(.4+.6*sstep(-4,15,e));
+  night=1-sstep(-3,7,e); stars.material.opacity=night*.9;
+  for(const l of nightLights){ if(l.isPointLight) l.intensity=night*14; else l.material.emissiveIntensity=night*2.2; }
+  updateGlow();
+  const h=Math.floor(hr), m=Math.floor((hr-h)*60); const tag=e<-1?'어스름':e<6?(hr<12?'일출':'노을'):e<20?(hr<12?'아침':'늦은 오후'):'한낮';
+  $('#clock').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} · ${tag}`; $('#tod').value=hr; }
+function updateGlow(){ const on=cur>=6?night:0; M.glass.emissive.setHex(0xffc27a); M.glass.emissiveIntensity=on*1.4; M.glass.opacity=.32+on*.5; indoor.intensity=on*10; }
+
+/* ---------------- 단계 적용 ---------------- */
+function applyStage(){
+  for(const it of items){ const vis=cur>=it.stage&&cur<=it.until; if(!vis){ it.obj.visible=false; continue; }
+    const k=it.stage<cur?1:clamp((animT*DUR-it.delay)/it.dur); it.obj.visible=k>0; it.fn(k); }
+  setSkin(cur>5||(cur===5&&animT*DUR>1.2)); updateGlow();
+}
+function setStage(n,animate=true){ cur=clamp(n,0,6); animT=animate?0:1; applyStage(); renderStageUI(); }
+function renderStageUI(){ const s=STAGES[cur];
+  $('#sNo').textContent=`STAGE ${cur} / 6`; $('#sTitle').textContent=s.n; $('#sTag').textContent=s.t; $('#sDesc').textContent=s.d; $('#sPts').innerHTML=s.p.map(x=>`<li>${x}</li>`).join('');
+  document.querySelectorAll('#steps button').forEach((b,i)=>{ b.classList.toggle('on',i===cur); b.classList.toggle('done',i<cur); });
+  $('#cNo').textContent=`STAGE ${cur}`; $('#cTitle').textContent=s.n; $('#cSub').textContent=s.t; }
+$('#steps').innerHTML=STAGES.map((s,i)=>`<button data-i="${i}"><b>${i}</b><span>${s.n}</span><i></i></button>`).join('');
+$('#steps').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b){ stopCine(); setStage(+b.dataset.i,true); } });
+$('#bPrev').onclick=()=>{ stopCine(); setStage(cur-1,true); }; $('#bNext').onclick=()=>{ stopCine(); setStage(cur+1,true); };
+$('#tod').addEventListener('input',e=>{ stopCine(); setTime(+e.target.value); });
+$('#sSrc').innerHTML=`집 데이터: <b>${designSrc}</b> · <a href="house-plan.html">설계 도구에서 수정 →</a>`;
+
+/* ---------------- 조경 제안 패널 ---------------- */
+function renderLand(){ const P=perim;
+  $('#land').innerHTML=`<h3>마당 처리 제안</h3><div class="big">바닥돌 사이 잔디 + 부분 콘크리트</div>
+  <div>현장은 마사토 성토 패드이고 동쪽 논 방향으로 자연 배수, 서·남쪽은 블록 옹벽이 도로에 붙어 있습니다. 전면 시멘트는 빗물이 옹벽·논으로 몰리고 여름 복사열이 크며, 잔디만 깔면 차량·동선 부분이 패여 진흙이 됩니다.</div>
+  <table style="margin-top:6px"><tr><td><span class="sw" style="background:#6f9a45"></span>앞마당·동측</td><td>화강석 디딤돌 + 잔디 (논 조망 벤치까지)</td></tr>
+  <tr><td><span class="sw" style="background:#bdbab3"></span>주차·진입</td><td>남서 모서리 도로에서 콘크리트(줄눈) 3.9 × 6.8 m</td></tr>
+  <tr><td><span class="sw" style="background:#a9a69e"></span>건물 둘레</td><td>쇄석 배수띠 0.6 m (낙수·튀김 방지)</td></tr>
+  <tr><td><span class="sw" style="background:#cfcac0"></span>비석 앞</td><td>화강 판석 2.4 × 2.4 m</td></tr></table>
+  <h3>담장 (총 ${(P.brick+P.fence+P.hedge).toFixed(0)} m)</h3>
+  <table><tr><td>도로변 서·남<br>${P.brick.toFixed(1)} m</td><td><b>붉은 벽돌 담장 H1.2 m</b> — 기존 블록 옹벽 위. 길 건너 마을 벽돌담과 재료를 맞추고, 허리~가슴 높이로 도로 시선만 가립니다.</td></tr>
+  <tr><td>동측 논 쪽<br>${P.fence.toFixed(1)} m</td><td><b>투시형 목재 펜스 H1.0 m</b> — 논·산 조망과 바람길을 열어 둡니다.</td></tr>
+  <tr><td>북측<br>${P.hedge.toFixed(1)} m</td><td><b>녹차나무 생울타리 H0.9~1.2 m</b> — 상록이라 겨울 북서풍을 막고 봄에 찻잎. 영암(전남 서남부)은 차나무가 월동하는 지역입니다.</td></tr>
+  <tr><td>대문</td><td>남서 진입부 3.8 m 개방 (차량)</td></tr></table>
+  <h3>식재</h3>
+  <table><tr><td>비석 양쪽</td><td>주목 2주 (H1.0~1.2, 원추형 전정)</td></tr>
+  <tr><td>북동·동</td><td>체리나무 2, 산수유 2 (봄 노란 꽃 · 가을 붉은 열매)</td></tr>
+  <tr><td>동·서</td><td>라일락 2 (향기, 뒤 데크·현관 동선)</td></tr>
+  <tr><td>남동·남</td><td>비파나무 1 (상록, 따뜻한 남측), 무화과 2</td></tr></table>
+  <h3>배치 근거</h3>
+  <div>· 건물은 현장 기초 형틀에 맞춰 장변 남북, <b>정면(현관·데크) 동향</b>. 건축허가 배치도의 서측 경계 6,000 이격을 도로(노장길) 쪽에 적용했고, 방위는 사진 기준으로 보정했습니다.<br>
+  · 비석은 참고 렌더의 건물–비석 관계(정면에서 볼 때 건물 왼쪽, 정면선보다 뒤)대로 남측에 둡니다.<br>· 지붕 참고 이미지는 재료(슁글)만 반영했습니다.</div>`; }
+
+/* ---------------- 카메라 · 시네마틱 · 1인칭 ---------------- */
+let cine=null, fp=false; const keys={}; const joy={x:0,y:0}; const P={x:-6.6,z:8.4,yaw:-Math.PI/2*.8,pitch:-.04,h:0};
+const CAM_HOME={pos:new THREE.Vector3(-21,12,24),t:new THREE.Vector3(1.5,1.2,0)};
+function flyTo(pos,t,ms=1600){ const p0=camera.position.clone(), t0=controls.target.clone(); const s=performance.now(); fly={p0,t0,pos,t,s,ms}; }
+let fly=null;
+function startCine(){ setCam('orbit'); cine={t:0,st:-1}; document.body.classList.add('cine'); $('#bCine').textContent='■ 정지'; setStage(0,false); controls.enabled=false; }
+function stopCine(){ if(!cine) return; cine=null; document.body.classList.remove('cine'); $('#bCine').textContent='▶ 시네마틱'; controls.enabled=!fp; }
+$('#bCine').onclick=()=>cine?stopCine():startCine();
+function updateCine(dt){ cine.t+=dt; const T=cine.t, per=6.6, st=Math.min(6,Math.floor(T/per));
+  if(st!==cine.st){ cine.st=st; setStage(st,true); }
+  const a=.2+T*.085, r=lerp(30,17,clamp(T/46))+Math.sin(T*.4)*1.2, h=lerp(15,6.5,clamp(T/46))+Math.sin(T*.25)*1.4;
+  camera.position.set(Math.cos(a)*r+1,h,Math.sin(a)*r); controls.target.set(1,1.2+cur*.25,-.8); camera.lookAt(controls.target);
+  setTime(lerp(6.7,18.05,clamp(T/50))); if(T>66) stopCine(); }
+function setCam(m){ fp=m==='fp'; document.body.classList.toggle('fp',fp); document.querySelectorAll('#segCam button').forEach(b=>b.classList.toggle('on',b.dataset.c===m));
+  if(fp){ stopCine(); controls.enabled=false; camera.fov=68; P.x=-6.6; P.z=8.4; P.yaw=-Math.PI*.4; P.pitch=-.04; }
+  else { controls.enabled=true; camera.fov=46; camera.position.copy(CAM_HOME.pos); controls.target.copy(CAM_HOME.t); }
+  camera.updateProjectionMatrix(); }
+document.querySelectorAll('#segCam button').forEach(b=>b.onclick=()=>setCam(b.dataset.c));
+$('#bPhoto').onclick=()=>{ stopCine(); setCam('orbit'); document.body.classList.toggle('photo'); if(document.body.classList.contains('photo')){ setStage(1,false); setTime(14.2); flyTo(new THREE.Vector3(-15.5,1.75,17.2),new THREE.Vector3(2.5,.4,-2.5)); } else flyTo(CAM_HOME.pos,CAM_HOME.t); };
+$('#bLabels').onclick=()=>{ labelsOn=!labelsOn; $('#bLabels').classList.toggle('on',labelsOn); };
+$('#bLand').onclick=()=>{ $('#land').classList.toggle('mhide'); };
+canvas.addEventListener('pointerdown',()=>{ if(cine) stopCine(); fly=null; });
+canvas.addEventListener('wheel',()=>{ if(cine) stopCine(); fly=null; },{passive:true});
+let look=null;
+canvas.addEventListener('pointerdown',e=>{ if(!fp) return; look={x:e.clientX,y:e.clientY,id:e.pointerId}; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove',e=>{ if(!fp||!look||e.pointerId!==look.id) return; P.yaw-=(e.clientX-look.x)*.0042; P.pitch=clamp(P.pitch-(e.clientY-look.y)*.0042,-1.2,1.2); look.x=e.clientX; look.y=e.clientY; });
+canvas.addEventListener('pointerup',()=>look=null);
+{ const j=$('#joy'), k=j.querySelector('.k'); let id=null; const set=e=>{ const r=j.getBoundingClientRect(); let x=(e.clientX-r.left-r.width/2)/(r.width/2), y=(e.clientY-r.top-r.height/2)/(r.height/2); const l=Math.hypot(x,y); if(l>1){x/=l;y/=l;} joy.x=x; joy.y=y; k.style.transform=`translate(${x*40}px,${y*40}px)`; };
+  j.addEventListener('pointerdown',e=>{ id=e.pointerId; j.setPointerCapture(id); set(e); }); j.addEventListener('pointermove',e=>{ if(e.pointerId===id) set(e); });
+  const end=()=>{ id=null; joy.x=joy.y=0; k.style.transform=''; }; j.addEventListener('pointerup',end); j.addEventListener('pointercancel',end); }
+addEventListener('keydown',e=>{ const k=e.key.toLowerCase(); keys[k]=true;
+  if(fp){ if(k==='escape') setCam('orbit'); return; }
+  if(k==='arrowright'){ stopCine(); setStage(cur+1,true); } if(k==='arrowleft'){ stopCine(); setStage(cur-1,true); }
+  if(k===' '){ e.preventDefault(); cine?stopCine():startCine(); } if(k==='l') $('#bLabels').click(); if(k==='p') $('#bPhoto').click(); if(k==='escape') stopCine(); });
+addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+function groundAt(x,z){ let g=H(x,z); const lx=-z, lz=x;
+  if(cur>=2&&Math.abs(lx)<W/2+.05&&Math.abs(lz)<D/2+.05) g=Math.max(g,SLAB_TOP); if(cur>=6){ if(lz>D/2&&lz<D/2+2&&Math.abs(lx)<W/2) g=Math.max(g,SLAB_TOP-.02); if(lz<-D/2&&lz>-D/2-1.5&&lx<-W/2+4.9&&lx>-W/2) g=Math.max(g,SLAB_TOP-.02); }
+  if(cur>=6&&(inPoly(x,z,PARK)||inPoly(x,z,PLAZA))) g=Math.max(g,.06); return g; }
+function pushOut(lx,lz,x0,x1,z0,z1,r){ if(lx>x0-r&&lx<x1+r&&lz>z0-r&&lz<z1+r){ const pen=[lx-(x0-r),(x1+r)-lx,lz-(z0-r),(z1+r)-lz], m=Math.min(...pen), i=pen.indexOf(m); if(i===0) lx=x0-r; else if(i===1) lx=x1+r; else if(i===2) lz=z0-r; else lz=z1+r; } return [lx,lz]; }
+function updateFP(dt){ const sp=(keys.shift?4.5:2.2)*dt; let fw=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joy.y, st=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x; const l=Math.hypot(fw,st); if(l>1){fw/=l;st/=l;}
+  P.x+=(-Math.sin(P.yaw)*fw+Math.cos(P.yaw)*st)*sp; P.z+=(-Math.cos(P.yaw)*fw-Math.sin(P.yaw)*st)*sp;
+  let lx=-P.z, lz=P.x; if(cur>=3) [lx,lz]=pushOut(lx,lz,-W/2,W/2,-D/2,D/2,.3); if(cur>=6) [lx,lz]=pushOut(lx,lz,W/2,W/2+3,-1.85,1.85,.3); P.z=-lx; P.x=lz;
+  const gh=groundAt(P.x,P.z); P.h+=(gh-P.h)*Math.min(1,dt*10); camera.position.set(P.x,P.h+1.62,P.z); camera.rotation.set(P.pitch,P.yaw,0,'YXZ'); }
+
+/* ---------------- 루프 ---------------- */
+function resize(){ renderer.setSize(innerWidth,innerHeight,false); camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize',resize); resize();
+let last=performance.now();
+function loop(now){ requestAnimationFrame(loop); const dt=Math.min(.05,(now-last)/1000); last=now;
+  if(animT<1){ animT=Math.min(1,animT+dt/DUR); applyStage(); document.querySelectorAll('#steps button i').forEach((el,i)=>el.style.width=(i===cur?animT*100:0)+'%'); }
+  if(cine) updateCine(dt); else if(fp) updateFP(dt); else if(fly){ const t=clamp((now-fly.s)/fly.ms), e=ease(t); camera.position.lerpVectors(fly.p0,fly.pos,e); controls.target.lerpVectors(fly.t0,fly.t,e); if(t>=1) fly=null; controls.update(); } else controls.update();
+  if(truck.visible) truck.userData.drum.rotation.x+=dt*2.2;
+  for(const c of clouds) c.position.x+=dt*.6;
+  sky.position.copy(camera.position); stars.position.copy(camera.position);
+  { const az=Math.atan2(camera.position.x-controls.target.x,camera.position.z-controls.target.z); const yaw=fp?P.yaw:az; $('#cRose').setAttribute('transform',`rotate(${(yaw)*180/Math.PI})`); }
+  updateLabels(); renderer.render(scene,camera); }
+renderLand(); setTime(15.3); setStage(1,false);
+requestAnimationFrame(loop);
+setTimeout(()=>{ $('#loading').style.opacity=0; setTimeout(()=>$('#loading').remove(),700); },150);
+window.__sim={setStage,setTime,startCine,setCam,camera,controls,get cur(){return cur;}};

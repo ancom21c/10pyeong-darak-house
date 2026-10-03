@@ -1,0 +1,7 @@
+node_modules
+*.log
+# 민감자료: 원본 도면·현장사진·지리정보 (로컬 보존, git 추적 금지)
+intels/
+docs/
+claude-opus-5.5/
+codex-gpt-6.1-sol/
