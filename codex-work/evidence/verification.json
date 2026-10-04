@@ -1,9 +1,9 @@
 {
-  "date": "2026-10-03T02:37:46.793Z",
+  "date": "2026-10-04T02:01:06.385Z",
   "browser": "Chromium 1200 / SwiftShader",
   "sourceSHA256": {
-    "house-plan.html": "0b9c265e07a38c0971a793a5240ac61793e9852e1b239d45da678a3f144bad90",
-    "site-sim.html": "395755691d693a21d5fc9e68a38df3219fa6a78f83776fa2a6fabf1060a1ad98"
+    "house-plan.html": "a695e371ce7883d3be2cd846311600a8b90723162603c8bd8ed91775cbe39718",
+    "site-sim.html": "fe949ba2f3206545e0534db239cb75d37c5e245623112d23c36ace8396ce6579"
   },
   "checks": [
     "본채 8,000mm 및 후면 3,000mm 도면 표시",
