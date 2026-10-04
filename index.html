@@ -3,43 +3,51 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>10평 단독주택 렌더링 비교 — Claude vs Codex</title>
+<title>10평 단독주택 렌더링 비교 — Claude vs Codex vs GLM</title>
 <style>
-:root{--bg:#f3efe7;--panel:#fffdf9;--line:#e3dccf;--ink:#2b2824;--muted:#8a8174;--c1:#b5653a;--c2:#2f5d62}
+:root{--bg:#f3efe7;--panel:#fffdf9;--line:#e3dccf;--ink:#2b2824;--muted:#8a8174;--c1:#b5653a;--c2:#2f5d62;--c3:#4a7c3f}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"IBM Plex Sans KR","Malgun Gothic",sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-.wrap{max-width:860px;width:100%}
+.wrap{max-width:1100px;width:100%}
 h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);font-size:13px;margin-bottom:22px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
-.card h2{font-size:16px;margin:0 0 10px}
+.card h2{font-size:15px;margin:0 0 10px}
 .card.claude h2{color:var(--c1)}
 .card.codex h2{color:var(--c2)}
-.card p{font-size:13px;color:var(--muted);margin:0 0 14px}
-a.btn{display:block;text-align:center;padding:9px 12px;border-radius:8px;text-decoration:none;color:#fff;font-size:14px;margin-bottom:8px}
+.card.glm h2{color:var(--c3)}
+.card p{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+a.btn{display:block;text-align:center;padding:9px 12px;border-radius:8px;text-decoration:none;color:#fff;font-size:13.5px;margin-bottom:8px}
 .claude .a1{background:var(--c1)}.claude .a2{background:#8a4f2d}
 .codex .a1{background:var(--c2)}.codex .a2{background:#244a4e}
+.glm .a1{background:var(--c3)}.glm .a2{background:#395f30}
 footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>10평 단독주택 렌더링 비교</h1>
-  <div class="sub">동일 프롬프트·동일 자료(intels) 투입 — 제로베이스 독립 제작 결과물 · 2026-10-03</div>
+  <div class="sub">동일 프롬프트·동일 자료(intels) 투입 — 제로베이스 독립 제작 결과물 · 2026-10-04</div>
   <div class="grid">
     <div class="card claude">
       <h2>Claude Opus 5.5 (medium)</h2>
-      <p>2D/3D 인테리어 도구 + 공사단계 시뮬레이션. 스크린샷 자가검증(.shots), 콘솔 오류 0.</p>
-      <a class="btn a1" href="claude-work/house-plan.html">🏠 house-plan.html (도면뷰)</a>
-      <a class="btn a2" href="claude-work/site-sim.html">🏗️ site-sim.html (현장 시뮬)</a>
+      <p>2D/3D 인테리어 도구 + 공사단계 시뮬레이션. 스크린샷 자가검증, 콘솔 오류 0. 소요 ~1.5h.</p>
+      <a class="btn a1" href="claude-work/house-plan.html">🏠 house-plan.html</a>
+      <a class="btn a2" href="claude-work/site-sim.html">🏗️ site-sim.html</a>
     </div>
     <div class="card codex">
-      <h2>Codex GPT-6.1-Sol (medium)</h2>
-      <p>동일 사양. 브라우저 e2e 검증 39개 통과, evidence 스크린샷 10장, README 해석노트.</p>
-      <a class="btn a1" href="codex-work/house-plan.html">🏠 house-plan.html (도면뷰)</a>
-      <a class="btn a2" href="codex-work/site-sim.html">🏗️ site-sim.html (현장 시뮬)</a>
+      <h2>Codex GPT-6.1-Sol (xhigh)</h2>
+      <p>브라우저 e2e 검증 67개 통과, 오류 0. 239k tokens. 소요 33분 — 최속·최다 검증.</p>
+      <a class="btn a1" href="codex-work/house-plan.html">🏠 house-plan.html</a>
+      <a class="btn a2" href="codex-work/site-sim.html">🏗️ site-sim.html</a>
+    </div>
+    <div class="card glm">
+      <h2>GLM dual-spark (로컬)</h2>
+      <p>GLM-5.3-Flash 로컬 서빙. Chromium 전단계 실실행 오류 0, flood-fill 면적 계산, 검증 데이터 출처 명시. 소요 2.2h.</p>
+      <a class="btn a1" href="glm-work/house-plan.html">🏠 house-plan.html</a>
+      <a class="btn a2" href="glm-work/site-sim.html">🏗️ site-sim.html</a>
     </div>
   </div>
   <footer>원본 자료(도면·현장사진·지리정보)는 비공개 관리 · 각 페이지 상단 버튼으로 상대 작업물 이동 가능</footer>
