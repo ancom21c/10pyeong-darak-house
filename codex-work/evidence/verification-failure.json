@@ -1,5 +1,4 @@
 {
-  "date": "2026-10-09T12:57:02.532Z",
   "results": [
     {
       "name": "수정 폭 8m · 후문 · 두 층 초기 도면",
@@ -54,7 +53,7 @@
     {
       "name": "다락 1인칭 높이 · 보이드 추락 방지",
       "passed": true,
-      "localX": 5.110469999599457
+      "localX": 5.13
     },
     {
       "name": "1층에서 계단을 실제 이동해 다락까지 연속 상승",
@@ -174,62 +173,9 @@
           "garden": true
         }
       ]
-    },
-    {
-      "name": "시간대 슬라이더 · 태양과 그림자 변경",
-      "passed": true
-    },
-    {
-      "name": "시네마틱 카메라 · 공정 자동 진행 · 중지",
-      "passed": true
-    },
-    {
-      "name": "현장 1인칭 · 다락 높이 오프셋",
-      "passed": true
-    },
-    {
-      "name": "다른 탭 편집 내용 실시간 반영",
-      "passed": true
-    },
-    {
-      "name": "마당 재료 · 조경 표시 제어",
-      "passed": true
-    },
-    {
-      "name": "3D PNG 내보내기",
-      "passed": true
-    },
-    {
-      "name": "대지 렌더링 성능",
-      "passed": true,
-      "renderInfo": {
-        "frame": 11,
-        "calls": 205,
-        "triangles": 34040,
-        "points": 0,
-        "lines": 72
-      }
-    },
-    {
-      "name": "390px 모바일 · 층 전환 · 속성 패널 · 3D",
-      "passed": true
-    },
-    {
-      "name": "모바일 빛과 조경 설정 열기/닫기",
-      "passed": true
-    },
-    {
-      "name": "모바일 실제 터치 궤도 회전",
-      "passed": true
-    },
-    {
-      "name": "CDN 차단 시 3D 오류 안내 · 2D 계속 동작",
-      "passed": true
-    },
-    {
-      "name": "정상 온라인 실행 JavaScript 및 콘솔 오류 없음",
-      "passed": true
     }
   ],
-  "errors": []
+  "errors": [],
+  "failure": "Error: page.screenshot: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n",
+  "stack": "page.screenshot: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\n    at /home/ancom/workspace/10pyeong-house/codex-work/evidence/verify.cjs:35:367"
 }

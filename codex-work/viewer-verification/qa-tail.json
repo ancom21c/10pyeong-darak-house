@@ -1,0 +1,98 @@
+{
+  "checks": [
+    {
+      "check": "순항에서 단계 자동 진행",
+      "passed": true,
+      "detail": {
+        "playing": true,
+        "stage": 1,
+        "elapsed": 6156.60000038147
+      }
+    },
+    {
+      "check": "순항 멈춤",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "현장 1인칭 키보드 이동",
+      "passed": true,
+      "detail": [
+        [
+          5,
+          2.4,
+          3
+        ],
+        [
+          4.76,
+          2.4,
+          3
+        ]
+      ]
+    },
+    {
+      "check": "현장 1인칭 종료",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "탭 간 실시간 저장안 반영",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "데스크톱 가로 넘침 없음",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "390px 모바일 평면 가로 넘침 없음",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "모바일 층 전환",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "모바일 두 손가락 확대",
+      "passed": true,
+      "detail": [
+        10250,
+        4659.0908203125
+      ]
+    },
+    {
+      "check": "390px 모바일 현장 가로 넘침 없음",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "모바일 단계 터치 전환",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "모바일 1인칭 이동 패드",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "CDN 실패 후 2D 복구",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "CDN 실패 현장 안내",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "최종 자바스크립트 실행 오류 없음",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

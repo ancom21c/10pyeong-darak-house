@@ -1,0 +1,70 @@
+{
+  "checks": [
+    {
+      "check": "IBM Plex Sans KR 실제 폰트 로딩",
+      "passed": true,
+      "detail": 28
+    },
+    {
+      "check": "내부 시점의 지붕·상부 프레임 제거",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "후면과 증축 지붕도 열기",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "실제 3D 메시의 보이드 구멍과 다락 바닥",
+      "passed": true,
+      "detail": {
+        "void": -8.940688189795765e-10,
+        "attic": 2.299999952316284
+      }
+    },
+    {
+      "check": "3D PNG 내보내기",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "최종 1인칭 렌더 루프의 키보드 이동",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "모바일 6종 가구 메뉴 터치 폭",
+      "passed": true,
+      "detail": [
+        55.5,
+        55.5,
+        55.5,
+        55.5,
+        55.5,
+        55.5
+      ]
+    },
+    {
+      "check": "모바일 가로 넘침 없음",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "최종 모바일 현장 단계와 화면",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "최종 완공 단계와 모든 마감",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "최종 브라우저 오류 없음",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

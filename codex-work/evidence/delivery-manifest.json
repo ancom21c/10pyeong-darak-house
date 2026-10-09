@@ -1,0 +1,207 @@
+{
+  "source_policy": "Only intels; no other agent results, sessions, or memory consulted. Tool packages are execution dependencies only.",
+  "runtime": "Standalone HTML, Three.js 0.160.0 CDN, no build",
+  "model_sha256": "ba500bcd11de9c8a48c93003059ea959d3ef43d4ebdf1839642e07f9a71592d7",
+  "outputs": {
+    "house-plan.html": {
+      "bytes": 85117,
+      "sha256": "8a5fad95adc59fc7f1cf771d4a321929d49dcd82000a3e24a68e5d59b797028a"
+    },
+    "site-sim.html": {
+      "bytes": 79779,
+      "sha256": "3492d0e900cf54f514d929ed85e43192931073437a6ada05515acc3cd2b333fb"
+    }
+  },
+  "supplied_intels": {
+    "GEO-NOTE.md": {
+      "bytes": 1391,
+      "sha256": "2cd2ea4500a4296e366293176e43e560955057bd8c2a73336bd0567886fe9225"
+    },
+    "map-naver.jpg": {
+      "bytes": 231080,
+      "sha256": "65e99b3af2c4a294a38bf0d3322a90f0cf77992e5adaf6b7324ee6a481bc3f9e"
+    },
+    "plans/elevation-front.jpg": {
+      "bytes": 174487,
+      "sha256": "c4d8a6515ee3061cb334b67aa33810c75f1879e7a4f2f2a33dfa45d7f47e884a"
+    },
+    "plans/floorplan-1f.jpg": {
+      "bytes": 262901,
+      "sha256": "d6a811d6b0a256709dde02e5e0efed53eac8bd037fb83e272e9e51d30c0d9085"
+    },
+    "plans/floorplan-attic.jpg": {
+      "bytes": 165623,
+      "sha256": "918c3a86ddc8ab461b32eb20aff265b90fe65ecd9e6f3223db687240a42a9d40"
+    },
+    "plans/original-floorplan.jpg": {
+      "bytes": 104676,
+      "sha256": "cec6dc25fd8bfd3c9673436eee8b78ac4aa50066678636776ec2827f89a50646"
+    },
+    "plans/site-plan-render.jpg": {
+      "bytes": 54835,
+      "sha256": "770bdf165115fc88102198a3d1039b692e577744825eaa83edd18c0b23853e17"
+    },
+    "plans/site-plan.jpg": {
+      "bytes": 210566,
+      "sha256": "de318b3b6767ad65698285e53ca72d2fd05ba608fc68f204f5d9b8cf871f8107"
+    },
+    "references/GEO-NOTE.md": {
+      "bytes": 2024,
+      "sha256": "2ff7fb43a936f53051db713b13c1b3236900ee72d8c1d02186ab2968bc4c5d17"
+    },
+    "references/map-neighborhood.jpg": {
+      "bytes": 231080,
+      "sha256": "65e99b3af2c4a294a38bf0d3322a90f0cf77992e5adaf6b7324ee6a481bc3f9e"
+    },
+    "references/satellite-context.jpg": {
+      "bytes": 77165,
+      "sha256": "41d9732bee5222be940f5782ef89ad990b53bf0c4f307230f2f82dea8ff83e03"
+    },
+    "references/site-photo-9.jpg": {
+      "bytes": 100776,
+      "sha256": "bf221b7e8fdc9928e610a9cf9999aaa858c3d17bf380d5de51f18706f5709bb5"
+    },
+    "references/건물-비석.jpg": {
+      "bytes": 54835,
+      "sha256": "770bdf165115fc88102198a3d1039b692e577744825eaa83edd18c0b23853e17"
+    },
+    "references/건축허가도면.jpg": {
+      "bytes": 100776,
+      "sha256": "bf221b7e8fdc9928e610a9cf9999aaa858c3d17bf380d5de51f18706f5709bb5"
+    },
+    "references/지붕.jpg": {
+      "bytes": 210566,
+      "sha256": "de318b3b6767ad65698285e53ca72d2fd05ba608fc68f204f5d9b8cf871f8107"
+    },
+    "site-photos/KakaoTalk_20261003_040924517_03.jpg": {
+      "bytes": 9742602,
+      "sha256": "4dd16e32e4378ad72fac2228a9a06b728d0166a4bf8b9ba3ed4d4623b16a2c3e"
+    },
+    "site-photos/KakaoTalk_20261003_040924517_04.jpg": {
+      "bytes": 9116083,
+      "sha256": "aeca9efb6541700b88433ab2b0aba95c702a21f174c2817a29194d274325e7d0"
+    },
+    "site-photos/KakaoTalk_20261003_040924517_05.jpg": {
+      "bytes": 10237195,
+      "sha256": "3b070c8a590193bd048a5065556c624498f607e24cc63383182ad873ad5ec5e7"
+    },
+    "site-photos/KakaoTalk_20261003_040924517_06.jpg": {
+      "bytes": 9348816,
+      "sha256": "92deaf92b8a195c4f7e2447f56558cee79a01920c327d20480ce8287e20069ec"
+    },
+    "site-photos/site-photo-1.jpg": {
+      "bytes": 1413901,
+      "sha256": "7d18678e98e3163c9320aa8836b1e621e9c68ca3272ce52c0dad31d639de4172"
+    },
+    "site-photos/site-photo-10.jpg": {
+      "bytes": 1240930,
+      "sha256": "b64bf2bf7de101a3c24020e6726aa67d2f96cbf30d2eb489a8d42585092ca8ac"
+    },
+    "site-photos/site-photo-11.jpg": {
+      "bytes": 1042247,
+      "sha256": "c2461003b1eaea2ea36dec1a18e60eac9a24a1750cca28380dd64ecf6ec57d3e"
+    },
+    "site-photos/site-photo-12.jpg": {
+      "bytes": 1143178,
+      "sha256": "c310b1e6c6ab5b1d422639d1ed07d3c4ea3c321c97bb21985d67dc9c59ca226e"
+    },
+    "site-photos/site-photo-13.jpg": {
+      "bytes": 1074239,
+      "sha256": "387dd7bcfba3db50651dcf0cfd2c5e70641f71c7302d1eb3fc0f7a12f9ddd8da"
+    },
+    "site-photos/site-photo-14.jpg": {
+      "bytes": 970547,
+      "sha256": "811da80d2d23311cf9ef87f80f057135c3207a17c732324432e96b9ec0342923"
+    },
+    "site-photos/site-photo-15.jpg": {
+      "bytes": 1316700,
+      "sha256": "29e698ebb7744ce17a72037c6d92d77a881f33b67a75df4bedd2495d10fac3c8"
+    },
+    "site-photos/site-photo-16.jpg": {
+      "bytes": 1318598,
+      "sha256": "b05aa4340a45355f77d3e4cbbe5059f21610a9ff2935bc74d31ca034fc11cbb7"
+    },
+    "site-photos/site-photo-17.jpg": {
+      "bytes": 725817,
+      "sha256": "456e9b219d1d1acc1f4a3e28ba955d91f5eab8e82da5babece6fb5038499891a"
+    },
+    "site-photos/site-photo-18.jpg": {
+      "bytes": 616574,
+      "sha256": "1f75f7a9417cec2817da601eacb3e33bd6b51611b8b18223c326fd38d6d8cfad"
+    },
+    "site-photos/site-photo-19.jpg": {
+      "bytes": 805127,
+      "sha256": "284310d4e44a0f70897be80327c11019bec518496c451af08a5a86f536994ad1"
+    },
+    "site-photos/site-photo-2.jpg": {
+      "bytes": 1631977,
+      "sha256": "f2defa0ddff9eb73dc3608ab6ee3066656b1970006879cd7242e29c0208d8047"
+    },
+    "site-photos/site-photo-20.jpg": {
+      "bytes": 1417973,
+      "sha256": "bb5a07f2b2de9fa21bcf70e3b2c66a526bd57cd84471e3f6281a713e85c947d8"
+    },
+    "site-photos/site-photo-21.jpg": {
+      "bytes": 1013713,
+      "sha256": "c988f9e493703283e6c39a703263ade5ee6fd7a2a296e16e16679385cc4df77e"
+    },
+    "site-photos/site-photo-3.jpg": {
+      "bytes": 1521544,
+      "sha256": "35610c3bf15091e6583cc20df363b8710d638ee0053addc4d431c0fe21b67c67"
+    },
+    "site-photos/site-photo-4.jpg": {
+      "bytes": 1235147,
+      "sha256": "bfa6094059e7220d1a548fc68b276eec14dd0718d2c7316ee8f2c7ca9017cda9"
+    },
+    "site-photos/site-photo-5.jpg": {
+      "bytes": 1079336,
+      "sha256": "49686b64be2487886f91dc12346afad5b313dd12ce37ada1a99c2b58fa0ac30b"
+    },
+    "site-photos/site-photo-6.jpg": {
+      "bytes": 1515076,
+      "sha256": "eed44f6b5e759b5565974e7ae315411d2df8686dcdac50bb2ae93cb85efe73ed"
+    },
+    "site-photos/site-photo-7.jpg": {
+      "bytes": 1431100,
+      "sha256": "8c875d5daa357d56abb2223108eabf8edddf19d0fe2b83f3b4caa023ba8f3715"
+    },
+    "site-photos/site-photo-8.jpg": {
+      "bytes": 1169701,
+      "sha256": "d4c7a9d43ae685baf01d2e5b4067b64f3c8ee44950b23aa9f62702b79a4b9395"
+    }
+  },
+  "verified_at": "2026-10-09T12:57:02.532Z",
+  "passed_behavior_checks": 27,
+  "console_errors": [],
+  "verification_sha256": "c305492dc5b0296d72a1333cec31fb5881eadadf8054821b2b6c3afae91f0c32",
+  "verification_environment": "Chromium 141, desktop 1440x1000 and mobile 390x844 with real touch emulation, software WebGL",
+  "checks": [
+    "수정 폭 8m · 후문 · 두 층 초기 도면",
+    "가구 실제 치수 변경 · 90도 회전 · 취소/다시 실행",
+    "가구 드래그 · 벽 자동 맞춤",
+    "가구 크기 손잡이 드래그",
+    "두 점 측정 · 3,000mm",
+    "비내력 칸막이 철거 · 방 병합 · 면적 재계산",
+    "칸막이 위치 변경",
+    "외곽 구조 보호",
+    "바닥재 변경 · 로컬 저장 · 재로드 복원",
+    "2D PNG 내보내기",
+    "완성형 3D · 다락 보이드 · 가구 층 높이",
+    "다락 1인칭 높이 · 보이드 추락 방지",
+    "1층에서 계단을 실제 이동해 다락까지 연속 상승",
+    "현장 초기 단계 4 · 정면 동향 · 두 페이지 저장 데이터 공유",
+    "7단계 전환 · 현재 상부 골조 · 계획 증축 분리",
+    "시간대 슬라이더 · 태양과 그림자 변경",
+    "시네마틱 카메라 · 공정 자동 진행 · 중지",
+    "현장 1인칭 · 다락 높이 오프셋",
+    "다른 탭 편집 내용 실시간 반영",
+    "마당 재료 · 조경 표시 제어",
+    "3D PNG 내보내기",
+    "대지 렌더링 성능",
+    "390px 모바일 · 층 전환 · 속성 패널 · 3D",
+    "모바일 빛과 조경 설정 열기/닫기",
+    "모바일 실제 터치 궤도 회전",
+    "CDN 차단 시 3D 오류 안내 · 2D 계속 동작",
+    "정상 온라인 실행 JavaScript 및 콘솔 오류 없음"
+  ]
+}
