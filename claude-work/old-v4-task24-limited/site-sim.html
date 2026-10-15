@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>10평 집 · 공사 단계 시뮬레이터</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#07090d; --panel:rgba(18,22,30,0.85); --border:rgba(255,255,255,0.08);
+    --fg:#e8eef5; --muted:#9aa3b2; --accent:#f0a44c; --accent2:#5aa6ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:'IBM Plex Sans KR',sans-serif;overflow:hidden;touch-action:none}
+  #stage{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%}
+  header{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;gap:12px;padding:10px 16px;background:linear-gradient(180deg,rgba(0,0,0,0.65),rgba(0,0,0,0));backdrop-filter:blur(8px);color:#fff}
+  header h1{margin:0;font-size:14px;font-weight:600;letter-spacing:.4px}
+  header .meta{color:var(--muted);font-size:11px;margin-left:4px}
+  header .spacer{flex:1}
+  header a,header button{color:#fff;background:rgba(255,255,255,0.06);border:1px solid var(--border);padding:7px 12px;border-radius:999px;font:inherit;font-size:12px;cursor:pointer;text-decoration:none}
+  header a:hover,header button:hover{background:rgba(240,164,76,0.2);border-color:var(--accent)}
+  header .seg{display:flex;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:rgba(0,0,0,0.3)}
+  header .seg button{border:none;border-radius:0;border-left:1px solid var(--border);padding:7px 12px;background:transparent}
+  header .seg button:first-child{border-left:none}
+  header .seg button.on{background:var(--accent);color:#1a1200;font-weight:600}
+
+  .stagebar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:10;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 18px;min-width:min(680px,94vw);backdrop-filter:blur(14px);box-shadow:0 8px 36px rgba(0,0,0,0.5)}
+  .stagebar .steps{display:flex;gap:4px;margin-bottom:10px}
+  .stagebar .steps button{flex:1;background:rgba(255,255,255,0.04);color:var(--fg);border:1px solid var(--border);padding:8px 2px;border-radius:8px;font:inherit;font-size:11px;cursor:pointer;line-height:1.3}
+  .stagebar .steps button.on{background:var(--accent);color:#1a1200;border-color:var(--accent);font-weight:600}
+  .stagebar .steps button .n{display:block;font-size:14px;font-weight:700;margin-bottom:1px}
+  .stagebar .label{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px}
+  .stagebar .desc{font-size:12px;color:var(--muted);line-height:1.6}
+  .stagebar .ctrl{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .stagebar .ctrl label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .stagebar input[type=range]{accent-color:var(--accent);width:160px}
+  .stagebar .ctrl button{background:rgba(240,164,76,0.15);border:1px solid var(--accent);color:var(--accent);padding:6px 12px;border-radius:999px;font:inherit;font-size:11px;cursor:pointer}
+  .stagebar .ctrl button.on{background:var(--accent);color:#1a1200}
+
+  .side{position:fixed;top:60px;right:16px;z-index:10;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px 14px;max-width:260px;backdrop-filter:blur(10px);font-size:12px;line-height:1.6}
+  .side h3{margin:0 0 6px;font-size:12px;color:var(--accent)}
+  .side .row{color:var(--muted)}
+  .side .row b{color:var(--fg)}
+
+  .legendsite{position:fixed;top:60px;left:16px;z-index:10;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;max-width:220px;backdrop-filter:blur(10px);font-size:11px;color:var(--muted);line-height:1.6}
+  .legendsite b{color:var(--fg)}
+  .legendsite .dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:4px}
+
+  .toast{position:fixed;top:56px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);padding:8px 14px;border-radius:999px;font-size:12px;z-index:50;opacity:0;transition:opacity .25s}
+  .toast.on{opacity:1}
+  @media (max-width:720px){
+    .side,.legendsite{display:none}
+    .stagebar{padding:10px 12px}
+    header h1{font-size:12px}
+    header .meta{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>10평 집 · 공사 단계 시뮬레이션</h1>
+  <span class="meta">전남 영암 서호면 청용리 724 · 노장길 238</span>
+  <div class="spacer"></div>
+  <div class="seg" id="camSeg">
+    <button data-c="orbit" class="on">조감</button>
+    <button data-c="fp">1인칭</button>
+  </div>
+  <button id="autoBtn">▶ 시네마틱 순항</button>
+  <a href="house-plan.html">← 평면도</a>
+</header>
+
+<div id="stage"><canvas id="c3d"></canvas></div>
+
+<div class="legendsite">
+  <div><b>저폴리 아치비즈 재구성</b></div>
+  <div>건물: 1층+다락, 폭 8.0m · 깊이 4.5m</div>
+  <div>향: <b>정면 동쪽</b> (아침햇살)</div>
+  <div>대지: 성토 패드, 남·동=논, 서·북=낮은 산림</div>
+  <div style="margin-top:4px"><span class="dot" style="background:#c4a97a"></span>흙·성토 패드</div>
+  <div><span class="dot" style="background:#6a8f52"></span>논·밭·잔디</div>
+  <div><span class="dot" style="background:#a86b3f"></span>곡선 도로</div>
+</div>
+
+<div class="side" id="side">
+  <h3>조경 · 마당 안</h3>
+  <div class="row">마당: <b>잔디 + 디딤돌 조합</b> (사진의 흙마당을 잔디로 복원, 현관 앞 돌길)</div>
+  <div class="row">서쪽 비석: <b>본채 좌측</b> · 양옆에 <b>주목</b> 2그루</div>
+  <div class="row">남·동 담장: <b>벽돌 하단 + 금속 팬츠 상단</b> (1.2m)</div>
+  <div class="row">담장 둘레: 산수유 · 라일락 · 비파 · 무화과 · 체리</div>
+  <div class="row">북쪽: <b>녹차 생울타리</b> (바람막이)</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+/* ============================================================
+   SITE SIMULATOR
+   Scale: 1 unit = 1 meter.
+   House footprint: 8.0 x 4.5 m (plan W x D).
+   Orientation: front (east face) is +X world.
+   Monument is on building's left (west side => -X).
+   ============================================================ */
+const canvas = document.getElementById('c3d');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xbdd4ea, 60, 220);
+
+const cam = new THREE.PerspectiveCamera(50, 1, 0.1, 500);
+cam.position.set(28, 18, 24);
+
+const orbit = new OrbitControls(cam, canvas);
+orbit.target.set(0, 2, 0); orbit.enableDamping=true; orbit.minDistance=4; orbit.maxDistance=120; orbit.maxPolarAngle = Math.PI*0.49;
+const fp = new PointerLockControls(cam, canvas);
+canvas.addEventListener('click', ()=>{ if(CAM.mode==='fp') fp.lock(); });
+
+const SUN = new THREE.DirectionalLight(0xfff2d0, 1.2);
+SUN.castShadow = true;
+SUN.shadow.mapSize.set(2048, 2048);
+SUN.shadow.camera.near = 1; SUN.shadow.camera.far = 120;
+const s = 40;
+SUN.shadow.camera.left=-s; SUN.shadow.camera.right=s;
+SUN.shadow.camera.top=s; SUN.shadow.camera.bottom=-s;
+SUN.shadow.bias = -0.0003;
+scene.add(SUN);
+const SKY_HEMI = new THREE.HemisphereLight(0xbdd4ea, 0x6b5a3a, 0.5); scene.add(SKY_HEMI);
+
+/* Sky dome */
+const sky = new THREE.Mesh(
+  new THREE.SphereGeometry(240, 24, 16),
+  new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    uniforms:{
+      top:{value:new THREE.Color(0x6ba3dd)},
+      bot:{value:new THREE.Color(0xe6ecf2)},
+    },
+    vertexShader:`varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader:`uniform vec3 top; uniform vec3 bot; varying vec3 vP; void main(){ float t = clamp((normalize(vP).y+0.1)/0.9, 0.0, 1.0); gl_FragColor = vec4(mix(bot, top, t), 1.0); }`
+  })
+);
+scene.add(sky);
+
+/* ===== Terrain ===== */
+const terrain = new THREE.Group(); scene.add(terrain);
+
+// Base paddy (rice fields) ground - large plane
+const paddy = new THREE.Mesh(
+  new THREE.PlaneGeometry(400,400,1,1),
+  new THREE.MeshStandardMaterial({color:0x7fa266, roughness:1})
+);
+paddy.rotation.x = -Math.PI/2; paddy.position.y = -0.02; paddy.receiveShadow = true;
+terrain.add(paddy);
+
+// Rice paddy pattern via grid of darker tiles south & east
+addPaddyTiles();
+function addPaddyTiles(){
+  const colors = [0x6a9256, 0x7ca568, 0x5f8752, 0x82ab6e];
+  for(let i=0;i<50;i++){
+    const w = 8+Math.random()*20, d=6+Math.random()*18;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w,d),
+      new THREE.MeshStandardMaterial({color:colors[i%4], roughness:1}));
+    m.rotation.x = -Math.PI/2;
+    const side = Math.random()<0.5 ? 'south':'east';
+    if(side==='south'){ m.position.set((Math.random()-0.5)*120, -0.015, 20+Math.random()*80); }
+    else { m.position.set(20+Math.random()*80, -0.015, (Math.random()-0.5)*100); }
+    m.receiveShadow = true;
+    terrain.add(m);
+  }
+}
+
+// Pad (slightly raised fill pad)
+const PAD_W = 24, PAD_D = 20, PAD_H = 0.9;
+const pad = new THREE.Mesh(
+  new THREE.CylinderGeometry(1,1,PAD_H, 24),
+  new THREE.MeshStandardMaterial({color:0xb8a07d, roughness:1})
+);
+pad.scale.set(PAD_W/2, 1, PAD_D/2);
+pad.position.y = PAD_H/2; pad.receiveShadow = true;
+terrain.add(pad);
+
+// Retaining stone wall around pad edge (south+east)
+const stoneMat = new THREE.MeshStandardMaterial({color:0x7d7266, roughness:1});
+for(let i=0;i<30;i++){
+  const th = Math.PI * (0.1 + i*0.025);
+  const x = Math.cos(th)*(PAD_W/2 + 0.1);
+  const z = Math.sin(th)*(PAD_D/2 + 0.1);
+  const h = 0.6 + Math.random()*0.3;
+  const b = new THREE.Mesh(new THREE.BoxGeometry(0.7, h, 0.6), stoneMat);
+  b.position.set(x, h/2 - 0.1, z); b.rotation.y = -th; b.castShadow = true; b.receiveShadow = true;
+  terrain.add(b);
+}
+
+// Curved road (coming from NW, going around south)
+const roadMat = new THREE.MeshStandardMaterial({color:0x6b5a4a, roughness:1});
+const roadCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-80, 0.02, -50),
+  new THREE.Vector3(-30, 0.02, -20),
+  new THREE.Vector3(-10, 0.02, 14),
+  new THREE.Vector3( 20, 0.02, 20),
+  new THREE.Vector3( 60, 0.02, 10),
+]);
+const roadGeo = new THREE.TubeGeometry(roadCurve, 100, 2.2, 6, false);
+const road = new THREE.Mesh(roadGeo, roadMat);
+road.position.y = 0.0; road.receiveShadow = true;
+terrain.add(road);
+
+// Stream (small blue line south of pad)
+const streamMat = new THREE.MeshStandardMaterial({color:0x5a94c2, roughness:0.3, metalness:0.1});
+const streamCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-50, 0.015, 18),
+  new THREE.Vector3(-10, 0.015, 22),
+  new THREE.Vector3( 30, 0.015, 16),
+  new THREE.Vector3( 70, 0.015, 24),
+]);
+const stream = new THREE.Mesh(new THREE.TubeGeometry(streamCurve, 60, 0.6, 6, false), streamMat);
+terrain.add(stream);
+
+// Low-poly mountain ridge (background north+west)
+addMountains();
+function addMountains(){
+  const mat = new THREE.MeshStandardMaterial({color:0x4e6a4e, roughness:1, flatShading:true});
+  const matFar = new THREE.MeshStandardMaterial({color:0x5e7e76, roughness:1, flatShading:true});
+  for(let i=0;i<14;i++){
+    const h = 10 + Math.random()*18;
+    const r = 10 + Math.random()*14;
+    const geom = new THREE.ConeGeometry(r, h, 4+Math.floor(Math.random()*3));
+    const m = new THREE.Mesh(geom, i%2?mat:matFar);
+    const ang = Math.PI*0.3 + i*0.18;
+    const dist = 60 + Math.random()*40;
+    m.position.set(Math.cos(ang)*dist * -1, h/2 - 0.5, -Math.sin(ang)*dist - 20);
+    m.castShadow = false; m.receiveShadow = false;
+    terrain.add(m);
+  }
+}
+
+/* ===== Village silhouettes (south across road) ===== */
+addVillage();
+function addVillage(){
+  const roofM = new THREE.MeshStandardMaterial({color:0x8a4b3c, roughness:0.9});
+  const wallM = new THREE.MeshStandardMaterial({color:0xe4dcc8, roughness:1});
+  for(let i=0;i<9;i++){
+    const g = new THREE.Group();
+    const w = 4+Math.random()*3, d = 3+Math.random()*2, h = 2.4;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), wallM);
+    body.position.y = h/2; body.castShadow = body.receiveShadow = true;
+    const roof = new THREE.Mesh(new THREE.CylinderGeometry(d*0.72, d*0.72, w, 3), roofM);
+    roof.rotation.z = Math.PI/2; roof.position.y = h + d*0.33; roof.castShadow = true;
+    g.add(body); g.add(roof);
+    g.position.set(-40 + i*8, 0, 36 + (i%2)*4);
+    g.rotation.y = Math.random()*0.5;
+    terrain.add(g);
+  }
+}
+
+/* ===== Utility poles ===== */
+for(let i=0;i<6;i++){
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,7,6), new THREE.MeshStandardMaterial({color:0x4e4a44}));
+  pole.position.y = 3.5; pole.castShadow = true;
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(1.4,0.08,0.08), new THREE.MeshStandardMaterial({color:0x4e4a44}));
+  arm.position.y = 6.4;
+  g.add(pole); g.add(arm);
+  const t = i/5;
+  const p = roadCurve.getPointAt(0.1 + t*0.75);
+  g.position.set(p.x, 0, p.z-3.5);
+  terrain.add(g);
+  // simple point light at top as street lamp (always on; dim)
+}
+
+/* ===== HOUSE (dynamic per stage) ===== */
+// Plan footprint in meters (centered at origin)
+const HW = 8.0, HD = 4.5, WALL_T = 0.15, WALL_H = 2.3, ATTIC_H = 1.8;
+// Attic room (east extension-ish on top floor): 3.0 x 3.3, placed east side
+const house = new THREE.Group();
+house.position.y = PAD_H;
+scene.add(house);
+
+/* All house parts under named groups so we can toggle per stage */
+const parts = {
+  formwork: new THREE.Group(),
+  rebar: new THREE.Group(),
+  slab: new THREE.Group(),
+  frame1: new THREE.Group(),   // 1F light steel frame
+  frame2: new THREE.Group(),   // attic frame + roof trusses
+  panels: new THREE.Group(),   // PIR sandwich panels (walls)
+  roofSkin: new THREE.Group(), // metal roof skin
+  finish:  new THREE.Group(),  // windows/doors/finish
+  atticEx: new THREE.Group(),  // 3.0 x 3.3 attic room highlight
+  interior:new THREE.Group(),
+};
+Object.values(parts).forEach(p=>house.add(p));
+
+/* Helpers */
+const BOX = (w,h,d,c,metal=false)=>{
+  return new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
+    new THREE.MeshStandardMaterial({color:c, roughness: metal?0.4:0.9, metalness: metal?0.6:0.05, flatShading:false}));
+};
+
+/* --- FORMWORK + REBAR (Stage 1) --- */
+function buildFormwork(){
+  const mat = new THREE.MeshStandardMaterial({color:0xb18b55, roughness:0.95});
+  // outer formwork rectangle
+  const t = 0.08, h = 0.55;
+  const addPanel = (w,d,x,z)=>{ const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat); m.position.set(x,h/2,z); m.castShadow=m.receiveShadow=true; parts.formwork.add(m); };
+  addPanel(HW+2*t, t, 0, -HD/2 - t/2);
+  addPanel(HW+2*t, t, 0,  HD/2 + t/2);
+  addPanel(t, HD, -HW/2 - t/2, 0);
+  addPanel(t, HD,  HW/2 + t/2, 0);
+  // inner formwork (thicker footer)
+  addPanel(HW, t*0.6, 0, -HD/2 + 0.5);
+  addPanel(HW, t*0.6, 0,  HD/2 - 0.5);
+  // rebar lattice
+  const rebarMat = new THREE.MeshStandardMaterial({color:0x6a5a3a, roughness:0.5, metalness:0.7});
+  for(let i=-HW/2+0.3;i<=HW/2-0.3;i+=0.35){
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,HD-0.4,6), rebarMat);
+    r.rotation.x = Math.PI/2; r.position.set(i, 0.5, 0); parts.rebar.add(r);
+  }
+  for(let i=-HD/2+0.3;i<=HD/2-0.3;i+=0.35){
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,HW-0.4,6), rebarMat);
+    r.rotation.z = Math.PI/2; r.position.set(0, 0.4, i); parts.rebar.add(r);
+  }
+}
+buildFormwork();
+
+/* --- SLAB (Stage 2) --- */
+function buildSlab(){
+  const slab = BOX(HW+0.2, 0.3, HD+0.2, 0xc9c6c0);
+  slab.position.y = 0.15; slab.receiveShadow = true;
+  parts.slab.add(slab);
+  // spandeck ribs underneath
+  const rib = new THREE.MeshStandardMaterial({color:0x8e8a82, roughness:0.8});
+  for(let i=-HW/2+0.5;i<HW/2;i+=0.6){
+    const r = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, HD), rib);
+    r.position.set(i, -0.02, 0); parts.slab.add(r);
+  }
+}
+buildSlab();
+
+/* --- 1F STEEL FRAME (Stage 3) --- */
+function buildFrame1(){
+  const steel = new THREE.MeshStandardMaterial({color:0xd3d7de, roughness:0.4, metalness:0.7});
+  // 4 corner columns + mid columns on long sides
+  const cols = [
+    [-HW/2,-HD/2],[HW/2,-HD/2],[-HW/2,HD/2],[HW/2,HD/2],
+    [-HW/2+2.6,-HD/2],[HW/2-3.2,-HD/2],
+    [-HW/2+2.6, HD/2],[HW/2-3.2, HD/2],
+    [-HW/2,0],[HW/2,0],
+  ];
+  const H = WALL_H;
+  for(const [x,z] of cols){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.12, H, 0.12), steel);
+    m.position.set(x, 0.3 + H/2, z); m.castShadow = true; parts.frame1.add(m);
+  }
+  // perimeter beams top
+  const addBeam = (x1,z1,x2,z2,y)=>{
+    const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(L,0.14,0.1), steel);
+    b.position.set((x1+x2)/2, y, (z1+z2)/2);
+    b.rotation.y = -Math.atan2(dz,dx); b.castShadow=true; parts.frame1.add(b);
+  };
+  addBeam(-HW/2,-HD/2, HW/2,-HD/2, 0.3+H);
+  addBeam(-HW/2, HD/2, HW/2, HD/2, 0.3+H);
+  addBeam(-HW/2,-HD/2, -HW/2,HD/2, 0.3+H);
+  addBeam( HW/2,-HD/2,  HW/2,HD/2, 0.3+H);
+  // mid cross beams
+  for(let z=-HD/2+1.2;z<HD/2;z+=1.5) addBeam(-HW/2, z, HW/2, z, 0.3+H);
+  // diagonal bracing (visible in site photos)
+  for(let i=0;i<4;i++){
+    const x = -HW/2 + i*HW/3;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(HW/3, H), 0.08, 0.06), steel);
+    b.position.set(x+HW/6, 0.3+H/2, -HD/2);
+    b.rotation.z = Math.atan2(H, HW/3);
+    parts.frame1.add(b);
+  }
+}
+buildFrame1();
+
+/* --- 2F ATTIC FRAME + ROOF TRUSS (Stage 4) --- */
+function buildFrame2(){
+  const steel = new THREE.MeshStandardMaterial({color:0xd3d7de, roughness:0.4, metalness:0.7});
+  const Y0 = 0.3 + WALL_H;
+  const H = ATTIC_H;
+  // attic columns
+  const cols = [
+    [-HW/2,-HD/2],[HW/2,-HD/2],[-HW/2,HD/2],[HW/2,HD/2],
+    [HW/2 - 3, -HD/2],[HW/2 - 3, HD/2 - (HD-3.3)],
+  ];
+  for(const [x,z] of cols){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.1, H, 0.1), steel);
+    m.position.set(x, Y0 + H/2, z); m.castShadow = true; parts.frame2.add(m);
+  }
+  // top plate / ridge
+  const addBeam = (x1,z1,x2,z2,y)=>{
+    const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(L,0.12,0.08), steel);
+    b.position.set((x1+x2)/2, y, (z1+z2)/2);
+    b.rotation.y = -Math.atan2(dz,dx); b.castShadow=true; parts.frame2.add(b);
+  };
+  const roofY = Y0 + H;
+  addBeam(-HW/2,-HD/2, HW/2,-HD/2, roofY);
+  addBeam(-HW/2, HD/2, HW/2, HD/2, roofY);
+  addBeam(-HW/2,-HD/2, -HW/2,HD/2, roofY);
+  addBeam( HW/2,-HD/2,  HW/2,HD/2, roofY);
+  // ridge
+  const ridgeY = roofY + 0.6;
+  addBeam(-HW/2, 0, HW/2, 0, ridgeY);
+  // roof rafters as trusses
+  const rafter = new THREE.MeshStandardMaterial({color:0xd3d7de, roughness:0.4, metalness:0.7});
+  const n = 6;
+  for(let i=0;i<=n;i++){
+    const x = -HW/2 + i*HW/n;
+    const L = Math.hypot(HD/2, 0.6);
+    const a = new THREE.Mesh(new THREE.BoxGeometry(L, 0.07, 0.05), rafter);
+    a.position.set(x, (ridgeY+roofY)/2, -HD/4);
+    a.rotation.x = Math.atan2(0.6, HD/2);
+    parts.frame2.add(a);
+    const b = a.clone(); b.position.z = HD/4; b.rotation.x = -Math.atan2(0.6, HD/2); parts.frame2.add(b);
+  }
+}
+buildFrame2();
+
+/* --- PIR PANELS (Stage 5) --- */
+function buildPanels(){
+  const mat = new THREE.MeshStandardMaterial({color:0xeae4d6, roughness:0.75});
+  const matSeam = new THREE.MeshStandardMaterial({color:0xcfc7b4, roughness:0.9});
+  const T = 0.1;
+  const Htot = WALL_H + ATTIC_H;
+  const addWall = (x1,z1,x2,z2)=>{
+    const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz);
+    const w = new THREE.Mesh(new THREE.BoxGeometry(L, Htot, T), mat);
+    w.position.set((x1+x2)/2, 0.3 + Htot/2, (z1+z2)/2);
+    w.rotation.y = -Math.atan2(dz,dx);
+    w.castShadow = true; w.receiveShadow = true;
+    parts.panels.add(w);
+    // seam stripes
+    for(let i=1;i<Htot/0.9;i++){
+      const seam = new THREE.Mesh(new THREE.BoxGeometry(L, 0.02, T+0.004), matSeam);
+      seam.position.set((x1+x2)/2, 0.3 + i*0.9, (z1+z2)/2);
+      seam.rotation.y = -Math.atan2(dz,dx);
+      parts.panels.add(seam);
+    }
+  };
+  addWall(-HW/2,-HD/2, HW/2,-HD/2);
+  addWall(-HW/2, HD/2, HW/2, HD/2);
+  addWall(-HW/2,-HD/2, -HW/2,HD/2);
+  addWall( HW/2,-HD/2,  HW/2,HD/2);
+}
+buildPanels();
+
+/* --- ROOF SKIN (Stage 5+) --- */
+function buildRoofSkin(){
+  const mat = new THREE.MeshStandardMaterial({color:0x394758, roughness:0.5, metalness:0.4});
+  const Y0 = 0.3 + WALL_H + ATTIC_H;
+  const L = Math.hypot(HD/2 + 0.3, 0.6);
+  const slopeAng = Math.atan2(0.6, HD/2);
+  const north = new THREE.Mesh(new THREE.BoxGeometry(HW+0.6, 0.08, L), mat);
+  north.position.set(0, Y0 + 0.3, -HD/4 - 0.15);
+  north.rotation.x = -slopeAng;
+  north.castShadow = true;
+  parts.roofSkin.add(north);
+  const south = north.clone();
+  south.position.z = HD/4 + 0.15; south.rotation.x = slopeAng; parts.roofSkin.add(south);
+  // ridge cap
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(HW+0.6, 0.1, 0.3),
+    new THREE.MeshStandardMaterial({color:0x2b3540, roughness:0.5, metalness:0.4}));
+  cap.position.set(0, Y0 + 0.62, 0); parts.roofSkin.add(cap);
+}
+buildRoofSkin();
+
+/* --- WINDOWS/DOORS/FINISH (Stage 6) --- */
+function buildFinish(){
+  const glass = new THREE.MeshPhysicalMaterial({color:0x7ec0ff, metalness:0.1, roughness:0.05, transmission:0.6, transparent:true, opacity:0.6});
+  const door = new THREE.MeshStandardMaterial({color:0x6b4a2e, roughness:0.7});
+  const back = new THREE.MeshStandardMaterial({color:0x9b6a3a, roughness:0.7});
+  const addPane = (x1,z1,x2,z2, w, h, cy, mat, offset)=>{
+    const dx=x2-x1, dz=z2-z1, L=Math.hypot(dx,dz);
+    const ux=dx/L, uz=dz/L;
+    const cx = x1 + ux*offset + ux*w/2;
+    const cz = z1 + uz*offset + uz*w/2;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.06), mat);
+    m.position.set(cx, cy, cz);
+    m.rotation.y = -Math.atan2(dz,dx);
+    parts.finish.add(m);
+  };
+  // Front (east) face = x = +HW/2
+  // Entry door
+  addPane(HW/2, -HD/2, HW/2, HD/2, 1.0, 2.1, 0.3+1.05, door, 1.0);
+  // Living window
+  addPane(HW/2, -HD/2, HW/2, HD/2, 1.8, 1.5, 0.3+1.65, glass, 2.5);
+  // East face is actually? wait: our house is already with x=±HW/2 and z=±HD/2. +X side is east: HW/2.
+  // we already placed on +X face (the function treats the segment from (HW/2,-HD/2) to (HW/2,HD/2)). OK.
+
+  // Back (west) face = -X: back door + window
+  addPane(-HW/2, HD/2, -HW/2, -HD/2, 0.9, 2.1, 0.3+1.05, back, 1.0);
+  addPane(-HW/2, HD/2, -HW/2, -HD/2, 1.2, 1.2, 0.3+1.4, glass, 2.5);
+
+  // North face = -Z: small kitchen/bath windows
+  addPane(-HW/2, -HD/2, HW/2, -HD/2, 0.6, 0.8, 0.3+1.6, glass, 0.6);
+  addPane(-HW/2, -HD/2, HW/2, -HD/2, 0.8, 1.0, 0.3+1.6, glass, 5.6);
+
+  // South face = +Z: living window + bedroom window
+  addPane(HW/2, HD/2, -HW/2, HD/2, 1.6, 1.5, 0.3+1.65, glass, 0.5);
+  addPane(HW/2, HD/2, -HW/2, HD/2, 1.2, 1.2, 0.3+1.4, glass, 4.5);
+
+  // Attic small windows (upper)
+  addPane(HW/2, -HD/2, HW/2, HD/2, 0.9, 0.9, 0.3+WALL_H+1.0, glass, 1.8);
+
+  // Gutter line
+  const gutter = new THREE.Mesh(new THREE.BoxGeometry(HW+0.4, 0.08, 0.12),
+    new THREE.MeshStandardMaterial({color:0x2b3540, roughness:0.6, metalness:0.4}));
+  gutter.position.set(0, 0.3+WALL_H+ATTIC_H+0.05, HD/2+0.2);
+  parts.finish.add(gutter);
+  const gutter2 = gutter.clone(); gutter2.position.z = -HD/2-0.2; parts.finish.add(gutter2);
+
+  // Entry step
+  const step = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.15, 0.8),
+    new THREE.MeshStandardMaterial({color:0x8a7f72, roughness:1}));
+  step.position.set(HW/2 + 0.4, 0.075, 0.0);
+  step.receiveShadow = true;
+  parts.finish.add(step);
+}
+buildFinish();
+
+/* --- ATTIC EXTENSION HIGHLIGHT (Stage 6: 다락 3.0x3.3 증축) --- */
+function buildAtticEx(){
+  const mat = new THREE.MeshStandardMaterial({color:0xeae4d6, roughness:0.75});
+  // We mark the 3.0x3.3 attic room as highlighted inner block above east side
+  const g = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.6, 3.3),
+    new THREE.MeshStandardMaterial({color:0xf0c88a, roughness:0.6, transparent:true, opacity:0.0}));
+  g.position.set(HW/2 - 1.5, 0.3 + WALL_H + 0.8, (HD/2) - 3.3/2);
+  parts.atticEx.add(g);
+}
+buildAtticEx();
+
+/* --- INTERIOR (visible once walls finish) --- */
+function buildInterior(){
+  const woodF = new THREE.MeshStandardMaterial({color:0xd9c6a1, roughness:0.9});
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(HW-0.3, 0.05, HD-0.3), woodF);
+  floor.position.set(0, 0.3+0.025, 0); floor.receiveShadow = true;
+  parts.interior.add(floor);
+  // stair box
+  const stair = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.9, 2.8), new THREE.MeshStandardMaterial({color:0x8f6a44, roughness:0.8}));
+  stair.position.set(HW/2 - 2.1, 0.3+0.95, -HD/2 + 1.4);
+  parts.interior.add(stair);
+  // sofa
+  const sofa = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.7, 0.9), new THREE.MeshStandardMaterial({color:0x8e6a4b}));
+  sofa.position.set(-HW/2 + 1.5, 0.65, HD/2 - 0.8);
+  parts.interior.add(sofa);
+  const bed = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.4, 2.0), new THREE.MeshStandardMaterial({color:0xd8b48a}));
+  bed.position.set(HW/2 - 1.3, 0.5, HD/2 - 1.4);
+  parts.interior.add(bed);
+}
+buildInterior();
+
+/* ===== LANDSCAPING (visible always; subtle at early stages) ===== */
+const landscape = new THREE.Group(); scene.add(landscape);
+
+// Yard area: grass + stepping stones + concrete apron
+const yardMat = new THREE.MeshStandardMaterial({color:0x6b8f52, roughness:1});
+const yard = new THREE.Mesh(new THREE.CircleGeometry(10, 24), yardMat);
+yard.rotation.x = -Math.PI/2; yard.position.y = PAD_H + 0.01;
+yard.receiveShadow = true; landscape.add(yard);
+
+// Stepping stones (path from south-east road to entry)
+const stoneT = new THREE.MeshStandardMaterial({color:0x9a8f80, roughness:1});
+for(let i=0;i<8;i++){
+  const t = i/8;
+  const sx = 6 + (1-t)*5, sz = 6 - t*6;
+  const s = new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.45,0.08, 8), stoneT);
+  s.position.set(sx, PAD_H+0.04, sz); landscape.add(s);
+}
+// Concrete apron in front of entry
+const apron = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.08, 2.4),
+  new THREE.MeshStandardMaterial({color:0xb6b1a7, roughness:1}));
+apron.position.set(HW/2 + 2.0, PAD_H+0.04, 0);
+apron.receiveShadow = true; landscape.add(apron);
+
+// Monument (비석) on WEST (left) of house
+const monG = new THREE.Group();
+const base = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.25,0.6),
+  new THREE.MeshStandardMaterial({color:0x4a4842, roughness:0.9}));
+base.position.y = 0.125; base.castShadow = base.receiveShadow = true;
+const stele = new THREE.Mesh(new THREE.BoxGeometry(0.5,1.2,0.18),
+  new THREE.MeshStandardMaterial({color:0x6b655d, roughness:0.4, metalness:0.1}));
+stele.position.y = 0.25 + 0.6; stele.castShadow = true;
+monG.add(base); monG.add(stele);
+monG.position.set(-HW/2 - 2.4, PAD_H, 0.3);
+landscape.add(monG);
+
+// Yew trees (주목) beside stele
+const yew = (x,z)=>{
+  const g = new THREE.Group();
+  const t = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,0.4,6), new THREE.MeshStandardMaterial({color:0x5e4a2e}));
+  t.position.y = 0.2; g.add(t);
+  const c = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.2, 7), new THREE.MeshStandardMaterial({color:0x2f5a3a, flatShading:true, roughness:1}));
+  c.position.y = 1.0; c.castShadow = true; g.add(c);
+  g.position.set(x, PAD_H, z); return g;
+};
+landscape.add(yew(-HW/2 - 3.4, 0.3));
+landscape.add(yew(-HW/2 - 1.5, 0.3));
+
+// Fence: brick base + metal pants top, around pad (south+east perimeter)
+function fenceBrick(x,y,z,w,rot){
+  const g = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.5, 0.2), new THREE.MeshStandardMaterial({color:0xa05b47, roughness:1}));
+  b.position.y = 0.25; b.castShadow = true; g.add(b);
+  const t = new THREE.Mesh(new THREE.BoxGeometry(w, 0.7, 0.05), new THREE.MeshStandardMaterial({color:0x4a4842, roughness:0.5, metalness:0.6}));
+  t.position.y = 0.5 + 0.35; t.castShadow = true; g.add(t);
+  // vertical panels (pants pattern)
+  for(let i=-w/2+0.1;i<w/2;i+=0.18){
+    const v = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.6, 0.08), new THREE.MeshStandardMaterial({color:0x5a5752, roughness:0.5, metalness:0.4}));
+    v.position.set(i, 0.5 + 0.35, 0); g.add(v);
+  }
+  g.position.set(x,y,z); g.rotation.y = rot; return g;
+}
+// south perimeter (near road)
+for(let x=-10; x<=10; x+=4) landscape.add(fenceBrick(x, PAD_H, 9, 4, 0));
+// east perimeter
+for(let z=-8; z<=8; z+=4) landscape.add(fenceBrick(10, PAD_H, z, 4, Math.PI/2));
+// north: green tea hedge instead of fence
+for(let x=-11; x<=11; x+=1.2){
+  const h = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 8), new THREE.MeshStandardMaterial({color:0x3b6a3a, roughness:1}));
+  h.position.set(x, PAD_H + 0.5, -9);
+  h.scale.set(1,0.8,1); h.castShadow = true;
+  landscape.add(h);
+}
+// west: green tea hedge continues
+for(let z=-9; z<=9; z+=1.2){
+  const h = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 8), new THREE.MeshStandardMaterial({color:0x3b6a3a, roughness:1}));
+  h.position.set(-10, PAD_H + 0.5, z);
+  h.scale.set(1,0.8,1); landscape.add(h);
+}
+
+// Perimeter fruit trees (산수유, 라일락, 비파, 무화과, 체리)
+const treeTypes = [
+  {name:'산수유', foliage:0xe8d64c, h:2.4, r:1.0},
+  {name:'라일락', foliage:0xb48dc6, h:2.0, r:0.9},
+  {name:'비파',   foliage:0x4a7a3a, h:2.6, r:1.1},
+  {name:'무화과', foliage:0x5c8a4a, h:2.2, r:1.0},
+  {name:'체리',   foliage:0xd97fa0, h:2.6, r:1.0},
+];
+const treeSpots = [];
+for(let i=0;i<10;i++){
+  const t = i/10 * Math.PI * 2;
+  const r = 9.3;
+  treeSpots.push([Math.cos(t)*r + (Math.random()-0.5)*0.5, Math.sin(t)*r + (Math.random()-0.5)*0.5, i]);
+}
+treeSpots.forEach(([x,z,i])=>{
+  const T = treeTypes[i%treeTypes.length];
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,0.9,6), new THREE.MeshStandardMaterial({color:0x5a3f22}));
+  trunk.position.y = 0.45; trunk.castShadow = true;
+  const can = new THREE.Mesh(new THREE.SphereGeometry(T.r, 10, 8), new THREE.MeshStandardMaterial({color:T.foliage, roughness:1, flatShading:true}));
+  can.position.y = 0.9 + T.r*0.6; can.castShadow = true;
+  g.add(trunk); g.add(can);
+  g.position.set(x, PAD_H, z);
+  landscape.add(g);
+});
+
+/* ============= STAGE DEFINITIONS ============= */
+const STAGES = [
+  {name:'0 · 빈 대지', desc:'성토 패드와 돌담, 주변 논·곡선 도로가 자리 잡은 시작점. 건물은 아직 없음.',
+   on:['landscape']},
+  {name:'1 · 기초 형틀·철근', desc:'거푸집(목재 형틀)과 기초 철근 배근. 사진 1~16 단계. 바닥은 아직 콘크리트 전.',
+   on:['landscape','formwork','rebar']},
+  {name:'2 · 콘크리트 타설', desc:'스팬덱 데크 위에 75mm 두께 RC 슬라브 타설. 평평한 기초 바닥 완성.',
+   on:['landscape','slab']},
+  {name:'3 · 1층 경량철골 프레임', desc:'1층 기둥·보가 올라감. 사진 17~21의 "현재 상태" 직전 단계.',
+   on:['landscape','slab','frame1']},
+  {name:'4 · 다락 골조 + 지붕 트러스', desc:'1층 위로 다락 골조와 지붕 트러스가 올라감. 사진 17~21 상태.',
+   on:['landscape','slab','frame1','frame2']},
+  {name:'5 · 폭양판 외장 + 지붕 마감', desc:'PIR 샌드위치 패널 외벽을 부분 시공, 금속 지붕 완성. 사진 22~34 범위.',
+   on:['landscape','slab','panels','roofSkin']},
+  {name:'6 · 창호·마감 완공', desc:'창호·현관·후문·실내가 들어오며 다락방(3.0×3.3) 증축이 완료된 완공 모습.',
+   on:['landscape','slab','panels','roofSkin','finish','interior','atticEx']},
+];
+function applyStage(i){
+  const on = new Set(STAGES[i].on);
+  for(const k of Object.keys(parts)) parts[k].visible = on.has(k);
+  // landscape visibility
+  landscape.visible = true; // always on; just vary density later
+  // stage-specific micro animation
+  animStageTransition(i);
+  document.getElementById('stageLabel').textContent = STAGES[i].name;
+  document.getElementById('stageDesc').textContent = STAGES[i].desc;
+  document.querySelectorAll('.steps button').forEach((b,ix)=>b.classList.toggle('on', ix===i));
+}
+// Simple pop-in anim: scale from 0 to 1 for newly visible groups
+function animStageTransition(i){
+  const on = STAGES[i].on;
+  on.forEach(k=>{
+    const grp = parts[k]; if(!grp) return;
+    grp.children.forEach(ch=>{
+      if(ch.userData.stage !== i){
+        ch.userData.stage = i;
+        const target = {x:ch.scale.x, y:ch.scale.y, z:ch.scale.z};
+        ch.scale.set(target.x, 0.001, target.z);
+        const t0 = performance.now();
+        const anim = ()=>{
+          const p = Math.min(1, (performance.now()-t0)/350);
+          const e = 1 - Math.pow(1-p, 3);
+          ch.scale.set(target.x, target.y*e + 0.001*(1-e), target.z);
+          if(p<1) requestAnimationFrame(anim);
+        };
+        requestAnimationFrame(anim);
+      }
+    });
+  });
+}
+
+/* ============= UI ============= */
+const stepsBar = document.createElement('div');
+const bar = document.createElement('div');
+bar.className = 'stagebar';
+bar.innerHTML = `
+  <div class="steps">${STAGES.map((s,i)=>`<button data-i="${i}"><span class="n">${i}</span>${s.name.split('·')[1]||s.name}</button>`).join('')}</div>
+  <div class="label" id="stageLabel"></div>
+  <div class="desc" id="stageDesc"></div>
+  <div class="ctrl">
+    <label>시간대 <input type="range" id="timeSlider" min="6" max="20" step="0.1" value="11"></label>
+    <span id="timeLabel" style="font-size:11px;color:var(--muted);width:48px">11:00</span>
+    <label style="margin-left:12px">단계 전환 <input type="range" id="stageSlider" min="0" max="${STAGES.length-1}" step="1" value="0"></label>
+  </div>`;
+document.body.appendChild(bar);
+
+bar.querySelector('.steps').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-i]'); if(!b) return;
+  const i = parseInt(b.dataset.i,10);
+  document.getElementById('stageSlider').value = i;
+  applyStage(i);
+});
+document.getElementById('stageSlider').addEventListener('input', e=>applyStage(parseInt(e.target.value,10)));
+
+const timeSlider = document.getElementById('timeSlider');
+const timeLabel = document.getElementById('timeLabel');
+function updateTime(h){
+  // sun arc: elevation and azimuth
+  const t = (h - 6)/14; // 0..1 from 6am to 8pm
+  const el = Math.sin(t*Math.PI) * 70 + 5; // deg
+  const az = -90 + t*180; // east to west over day
+  const elR = el*Math.PI/180, azR = az*Math.PI/180;
+  const r = 60;
+  SUN.position.set(Math.sin(azR)*Math.cos(elR)*r, Math.sin(elR)*r + 2, Math.cos(azR)*Math.cos(elR)*r);
+  // Warmer color near sunrise/sunset
+  const warmth = Math.max(0, 1 - Math.sin(t*Math.PI));
+  const c = new THREE.Color().setHSL(0.08 + warmth*0.03, 0.5 + warmth*0.4, 0.6 - warmth*0.1);
+  SUN.color.copy(c);
+  SUN.intensity = 0.6 + Math.sin(t*Math.PI)*0.9;
+  SKY_HEMI.intensity = 0.3 + Math.sin(t*Math.PI)*0.4;
+  // Sky
+  const topC = new THREE.Color().setHSL(0.58, 0.5, 0.4 + Math.sin(t*Math.PI)*0.3);
+  const botC = new THREE.Color().setHSL(0.08 + warmth*0.04, 0.4 + warmth*0.3, 0.75 - warmth*0.2);
+  sky.material.uniforms.top.value.copy(topC);
+  sky.material.uniforms.bot.value.copy(botC);
+  scene.fog.color.copy(botC);
+  timeLabel.textContent = `${Math.floor(h).toString().padStart(2,'0')}:${Math.floor((h%1)*60).toString().padStart(2,'0')}`;
+}
+timeSlider.addEventListener('input', e=>updateTime(parseFloat(e.target.value)));
+updateTime(11);
+applyStage(4); // default to current site state per instructions
+document.getElementById('stageSlider').value = 4;
+
+/* Camera modes */
+const CAM = {mode:'orbit'};
+document.getElementById('camSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-c]'); if(!b) return;
+  document.querySelectorAll('#camSeg button').forEach(x=>x.classList.toggle('on', x===b));
+  CAM.mode = b.dataset.c;
+  if(CAM.mode==='fp'){
+    cam.position.set(14, PAD_H+1.6, 2);
+    cam.lookAt(0, PAD_H+1.6, 0);
+    toast('화면을 클릭해 시점 고정 · WASD 이동');
+  } else {
+    cam.position.set(28, 18, 24); orbit.target.set(0,2,0);
+  }
+});
+const keys = {};
+document.addEventListener('keydown', e=>keys[e.code]=true);
+document.addEventListener('keyup', e=>keys[e.code]=false);
+
+/* Cinematic auto-cruise */
+let AUTO = false;
+document.getElementById('autoBtn').addEventListener('click', ()=>{
+  AUTO = !AUTO;
+  document.getElementById('autoBtn').textContent = AUTO ? '⏸ 순항 중지' : '▶ 시네마틱 순항';
+  if(AUTO){
+    CAM.mode = 'orbit';
+    document.querySelectorAll('#camSeg button').forEach(x=>x.classList.toggle('on', x.dataset.c==='orbit'));
+  }
+  AUTO_START = performance.now();
+});
+let AUTO_START = 0;
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove('on'), 1900);
+}
+
+/* ===== render loop ===== */
+function resize(){
+  const r = canvas.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  cam.aspect = r.width/r.height; cam.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize); resize();
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(AUTO){
+    const t = (performance.now()-AUTO_START)/1000;
+    const totalStages = STAGES.length;
+    const stageIdx = Math.min(totalStages-1, Math.floor(t/4));
+    if(parseInt(document.getElementById('stageSlider').value,10) !== stageIdx){
+      document.getElementById('stageSlider').value = stageIdx;
+      applyStage(stageIdx);
+    }
+    // orbit around
+    const ang = t*0.18;
+    cam.position.set(Math.cos(ang)*22, 12 + Math.sin(ang*0.5)*4, Math.sin(ang)*22);
+    cam.lookAt(0, 2, 0);
+    // time of day cycle too
+    const h = 7 + ((t*0.3)%12);
+    if(Math.abs(parseFloat(timeSlider.value) - h) > 0.2){ timeSlider.value = h; updateTime(h); }
+  } else if(CAM.mode==='orbit'){
+    orbit.update();
+  } else {
+    const sp = 0.12;
+    const dir = new THREE.Vector3();
+    if(keys['KeyW']) dir.z -= 1;
+    if(keys['KeyS']) dir.z += 1;
+    if(keys['KeyA']) dir.x -= 1;
+    if(keys['KeyD']) dir.x += 1;
+    dir.normalize().multiplyScalar(sp);
+    const yaw = cam.rotation.y;
+    cam.position.x += dir.x*Math.cos(yaw) + dir.z*Math.sin(yaw);
+    cam.position.z += -dir.x*Math.sin(yaw) + dir.z*Math.cos(yaw);
+    if(keys['Space']) cam.position.y += 0.1;
+    if(keys['ShiftLeft']||keys['ShiftRight']) cam.position.y = Math.max(PAD_H+0.5, cam.position.y - 0.1);
+  }
+  renderer.render(scene, cam);
+}
+animate();
+</script>
+</body>
+</html>
