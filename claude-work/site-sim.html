@@ -1,817 +1,1813 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>하늘집 공사현장 — 단계 시뮬레이션</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>청용리 724 · 시공단계 시뮬레이션</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <style>
-  :root{--bg:#0a0d12;--panel:#13171f;--ink:#e8ecf1;--mut:#8a93a3;--accent:#9dd1ff;--accent2:#ffbf69}
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans KR",system-ui,sans-serif;overflow:hidden}
-  header{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 16px;background:rgba(10,13,18,.85);backdrop-filter:blur(8px);border-bottom:1px solid #1f2530;z-index:50}
-  header .brand{font-weight:600}
-  header .brand small{color:var(--mut);margin-left:8px;font-weight:400}
-  header .spacer{flex:1}
-  header a,header button{background:#1a2030;border:1px solid #2a3140;color:var(--ink);padding:7px 12px;border-radius:8px;font:inherit;cursor:pointer;text-decoration:none;font-size:13px}
-  header a:hover{border-color:var(--accent)}
-  main{position:absolute;top:52px;bottom:0;left:0;right:0}
-  canvas{display:block;width:100%;height:100%}
-  .step-panel{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);background:rgba(19,23,31,.92);backdrop-filter:blur(10px);border:1px solid #262c38;border-radius:14px;padding:14px 18px;min-width:720px;max-width:92vw;z-index:5;box-shadow:0 10px 30px rgba(0,0,0,.4)}
-  .step-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-  .step-head .num{background:linear-gradient(135deg,#2b4a70,#4a7fb2);color:#fff;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px}
-  .step-head .ttl{font-weight:600;font-size:15px}
-  .step-head .meta{color:var(--mut);font-size:12px;margin-left:auto}
-  .step-desc{color:#c3cad6;font-size:13px;line-height:1.6;margin-bottom:10px}
-  .step-slider{display:flex;align-items:center;gap:10px}
-  .step-slider input{flex:1;accent-color:var(--accent)}
-  .step-dots{display:flex;gap:4px}
-  .step-dots button{width:28px;height:24px;background:#1f2530;color:var(--mut);border:1px solid #2a3140;border-radius:6px;font:inherit;font-size:11px;cursor:pointer}
-  .step-dots button.on{background:#2b4a70;color:#fff;border-color:var(--accent)}
-  .right-panel{position:absolute;right:16px;top:70px;display:flex;flex-direction:column;gap:10px;z-index:5}
-  .ctrl{background:rgba(19,23,31,.92);backdrop-filter:blur(10px);border:1px solid #262c38;border-radius:10px;padding:10px 12px;min-width:220px}
-  .ctrl h4{margin:0 0 6px;font-size:11px;letter-spacing:1px;color:var(--mut);text-transform:uppercase;font-weight:500}
-  .ctrl label{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin:4px 0;gap:8px}
-  .ctrl input[type=range]{flex:1;accent-color:var(--accent2)}
-  .ctrl .seg{display:flex;background:#1f2530;border-radius:7px;padding:3px;gap:2px}
-  .ctrl .seg button{flex:1;background:transparent;border:0;color:var(--mut);padding:5px;border-radius:5px;font:inherit;font-size:12px;cursor:pointer}
-  .ctrl .seg button.on{background:#2b4a70;color:#fff}
-  .ctrl button.big{width:100%;background:linear-gradient(135deg,#2b4a70,#4a7fb2);border:0;color:#fff;padding:9px;border-radius:7px;font:inherit;font-size:13px;cursor:pointer;margin-top:4px;font-weight:500}
-  .ctrl button.big.on{background:linear-gradient(135deg,#b2744a,#ffbf69)}
-  .notice{position:absolute;left:16px;top:68px;background:rgba(19,23,31,.9);backdrop-filter:blur(8px);border:1px solid #262c38;border-radius:10px;padding:10px 14px;font-size:12px;color:var(--mut);z-index:5;max-width:280px;line-height:1.6}
-  .notice b{color:var(--ink);font-weight:500}
-  .toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:#2b4a70;color:#fff;padding:7px 14px;border-radius:8px;font-size:12.5px;opacity:0;transition:opacity .3s;z-index:30;pointer-events:none}
-  .toast.show{opacity:1}
+  :root {
+    --bg: #0b0f13;
+    --panel: rgba(16, 20, 26, 0.78);
+    --panel-solid: #10141a;
+    --border: rgba(255,255,255,0.09);
+    --text: #e8ecf1;
+    --muted: #8c95a3;
+    --accent: #7cc4ff;
+    --accent-strong: #46a2ff;
+    --warm: #ffb86b;
+    --ok: #7ee787;
+    --danger: #ff6b6b;
+    --shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'IBM Plex Sans KR', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased; overflow: hidden; }
+  canvas { display: block; }
+  #app { position: fixed; inset: 0; }
+  #scene { position: absolute; inset: 0; }
+
+  header.topbar {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; gap: 12px;
+    background: linear-gradient(180deg, rgba(10,13,17,0.85), rgba(10,13,17,0));
+    pointer-events: none;
+  }
+  header.topbar > * { pointer-events: auto; }
+  .brand {
+    display: flex; align-items: baseline; gap: 10px;
+    font-weight: 600; letter-spacing: 0.2px;
+  }
+  .brand .tag { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); align-self: center; }
+  .nav-link {
+    color: var(--text); text-decoration: none; font-size: 13px; opacity: 0.85;
+    padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel);
+    backdrop-filter: blur(10px);
+  }
+  .nav-link:hover { opacity: 1; border-color: var(--accent); color: var(--accent); }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--shadow);
+  }
+
+  /* Stage panel - bottom center */
+  #stage-panel {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+    z-index: 10; width: min(960px, calc(100vw - 32px));
+    padding: 14px 16px;
+  }
+  #stage-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  #stage-title { font-weight: 600; font-size: 15px; }
+  #stage-title .idx { color: var(--accent); margin-right: 8px; font-variant-numeric: tabular-nums; }
+  #stage-desc { font-size: 12.5px; color: var(--muted); line-height: 1.55; min-height: 36px; }
+
+  #stage-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+  .stage-btn {
+    appearance: none; border: 1px solid var(--border); background: transparent;
+    color: var(--text); font-family: inherit; font-size: 12px; padding: 6px 10px;
+    border-radius: 999px; cursor: pointer; transition: all .18s ease;
+    white-space: nowrap;
+  }
+  .stage-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .stage-btn.active { background: var(--accent); color: #04101c; border-color: var(--accent); font-weight: 600; }
+
+  #stage-slider-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  input[type="range"] { -webkit-appearance: none; appearance: none;
+    flex: 1; height: 4px; background: #222a35; border-radius: 2px; outline: none; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); border: 2px solid #04101c; cursor: pointer; box-shadow: 0 0 10px rgba(124,196,255,0.5);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); border: 2px solid #04101c; cursor: pointer;
+  }
+
+  /* Right side control panel */
+  #right-panel {
+    position: absolute; right: 14px; top: 60px; z-index: 10;
+    width: 260px; padding: 14px; font-size: 12.5px;
+    display: flex; flex-direction: column; gap: 12px;
+    max-height: calc(100vh - 220px); overflow-y: auto;
+  }
+  #right-panel h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .row label { color: var(--muted); font-size: 12px; }
+  .row .val { font-variant-numeric: tabular-nums; color: var(--text); font-size: 12px; }
+
+  .toggle-btn {
+    appearance: none; border: 1px solid var(--border); background: transparent;
+    color: var(--text); font-family: inherit; font-size: 12px; padding: 7px 10px;
+    border-radius: 8px; cursor: pointer; transition: all .18s ease; text-align: left;
+  }
+  .toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .toggle-btn.on { background: rgba(124,196,255,0.14); border-color: var(--accent); color: var(--accent); }
+  .toggle-btn .k { opacity: 0.5; font-size: 10px; margin-left: 6px; }
+
+  /* Left info panel */
+  #left-panel {
+    position: absolute; left: 14px; top: 60px; z-index: 10;
+    width: 260px; padding: 14px; font-size: 12.5px;
+    max-height: calc(100vh - 220px); overflow-y: auto;
+  }
+  #left-panel h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+  #left-panel .sub { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+  #left-panel .facts { font-size: 12px; color: var(--text); display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; }
+  #left-panel .facts dt { color: var(--muted); }
+  #left-panel .facts dd { margin: 0; }
+  #yard-note { margin-top: 10px; padding: 9px 10px; border-radius: 8px;
+    background: rgba(126,231,135,0.06); border: 1px solid rgba(126,231,135,0.18);
+    color: #cdeccf; line-height: 1.55; font-size: 11.5px; display: none; }
+  #yard-note b { color: var(--ok); font-weight: 600; }
+
+  /* Compass */
+  #compass {
+    position: absolute; right: 20px; bottom: 170px; z-index: 10;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--panel); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(10px); box-shadow: var(--shadow);
+  }
+  #compass svg { width: 40px; height: 40px; }
+  #compass .n { fill: var(--accent); font-size: 10px; font-weight: 700; }
+
+  /* loading overlay */
+  #loading {
+    position: absolute; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at center, #121820 0%, #06080b 100%);
+    color: var(--muted); font-size: 13px; letter-spacing: 0.05em;
+    transition: opacity .6s ease; pointer-events: none;
+  }
+  #loading.hide { opacity: 0; }
+  .spinner {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid rgba(124,196,255,0.2); border-top-color: var(--accent);
+    animation: spin 1s linear infinite; margin-right: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 1인칭 안내 */
+  #fp-hint {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 15;
+    background: var(--panel-solid); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 26px; text-align: center; display: none;
+  }
+  #fp-hint b { color: var(--accent); }
+  #fp-hint .sm { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+
+  /* mobile tweaks */
+  @media (max-width: 760px) {
+    #left-panel, #right-panel { width: calc(50vw - 20px); font-size: 11.5px; max-height: 40vh; }
+    #right-panel { top: 56px; }
+    #left-panel { top: 56px; }
+    #stage-panel { width: calc(100vw - 20px); padding: 10px 12px; bottom: 10px; }
+    .stage-btn { padding: 5px 8px; font-size: 11px; }
+    #compass { bottom: 220px; right: 12px; width: 46px; height: 46px; }
+    #compass svg { width: 32px; height: 32px; }
+    header.topbar { padding: 8px 10px; }
+    .brand { font-size: 13px; }
+    .brand .tag { display: none; }
+  }
+
+  .hidden { display: none !important; }
+
+  /* small helper */
+  kbd {
+    display: inline-block; padding: 1px 5px; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--text); background: #1a2029; border: 1px solid var(--border); border-radius: 4px;
+  }
 </style>
 </head>
 <body>
+<div id="app">
+  <div id="scene"></div>
 
-<header>
-  <div class="brand">하늘집 공사현장 <small>영암 서호면 청용리 724 · 노장길 238 · 단계 시뮬레이션</small></div>
-  <div class="spacer"></div>
-  <a href="house-plan.html">← 평면도</a>
-</header>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>청용리 724 · 시공 시뮬레이션</span>
+      <span class="tag">전남 영암군 서호면 · 노장길 238</span>
+    </div>
+    <a class="nav-link" href="house-plan.html">← 평면도/인테리어 (house-plan.html)</a>
+  </header>
 
-<main>
-  <canvas id="c"></canvas>
+  <aside id="left-panel" class="panel">
+    <h3 id="stage-title-big">현장 개요</h3>
+    <div class="sub" id="stage-sub">실제 현장 사진과 허가도면을 바탕으로 재구성한 저폴리 아카이브-비즈 씬입니다.</div>
+    <dl class="facts">
+      <dt>대지</dt><dd>마을 북동 끝, 성토 패드</dd>
+      <dt>정면</dt><dd>동향 (논·들판)</dd>
+      <dt>배면</dt><dd>서·북 낮은 능선</dd>
+      <dt>진입</dt><dd>남서→남쪽 곡선로</dd>
+      <dt>1층</dt><dd>8000 × 4300 mm</dd>
+      <dt>다락</dt><dd>2800 × 3100 mm (오른쪽)</dd>
+      <dt>높이</dt><dd>벽 2300 + 박공 1800</dd>
+    </dl>
+    <div id="yard-note">
+      <b>마당 처리 제안</b> — 진입로는 콘크리트 포장(차량 하중·배수),
+      현관까지는 디딤돌+잔디(보행·녹지), 중심 마당은 잔디로 두고,
+      북쪽에 녹차 생울타리로 바람·시선을 거릅니다.
+      사진의 자갈·다진 흙 현황을 보완해 유지관리를 줄이는 혼합안입니다.
+    </div>
+  </aside>
 
-  <div class="notice">
-    <b>마우스</b> 드래그=회전 · 휠=줌 · 우클릭=이동<br>
-    <b>터치</b> 1손=회전 · 2손=줌/이동<br>
-    아래 단계 슬라이더로 시간을 조절하세요.
-  </div>
-
-  <div class="right-panel">
-    <div class="ctrl">
+  <aside id="right-panel" class="panel">
+    <div class="control-group">
       <h4>카메라</h4>
-      <div class="seg" id="cam-seg">
-        <button data-cam="orbit" class="on">조감</button>
-        <button data-cam="fp">둘러보기</button>
+      <button class="toggle-btn" id="btn-view">궤도 뷰 <span class="k">V</span></button>
+      <button class="toggle-btn" id="btn-fp">1인칭 모드 <span class="k">F</span></button>
+      <button class="toggle-btn" id="btn-cinema">시네마틱 순항 <span class="k">C</span></button>
+    </div>
+    <div class="control-group">
+      <h4>시간대 (해의 각도)</h4>
+      <div class="row"><label>시각</label><span class="val" id="time-val">13:00</span></div>
+      <input type="range" id="time-slider" min="5" max="20" step="0.1" value="13" />
+    </div>
+    <div class="control-group">
+      <h4>프리셋</h4>
+      <div class="row" style="gap:4px;">
+        <button class="toggle-btn" data-time="6.5" style="flex:1;">아침</button>
+        <button class="toggle-btn" data-time="13" style="flex:1;">정오</button>
+        <button class="toggle-btn" data-time="18.5" style="flex:1;">노을</button>
       </div>
-      <button class="big" id="cinema">시네마틱 자동 순항</button>
     </div>
-    <div class="ctrl">
-      <h4>시간대</h4>
-      <label>태양 각도 <input id="sun" type="range" min="5" max="85" value="50"></label>
-      <label>색온도 <input id="warm" type="range" min="0" max="100" value="50"></label>
-      <div style="font-size:11px;color:var(--mut);margin-top:4px">아침 · 정오 · 노을 그림자 변화</div>
+    <div class="control-group">
+      <h4>표시</h4>
+      <button class="toggle-btn on" id="btn-shadows">그림자</button>
+      <button class="toggle-btn on" id="btn-trees">주변 수목·논</button>
+      <button class="toggle-btn" id="btn-grid">치수·그리드</button>
     </div>
-    <div class="ctrl">
-      <h4>시각화</h4>
-      <label><span>지붕 투명</span><input id="rof" type="range" min="0" max="100" value="100"></label>
-      <label><span>조경 밀도</span><input id="land" type="range" min="20" max="100" value="80"></label>
-      <label><span>안개</span><input id="fog" type="range" min="0" max="100" value="30"></label>
+  </aside>
+
+  <section id="stage-panel" class="panel">
+    <div id="stage-head">
+      <div id="stage-title"><span class="idx">01</span><span id="stage-name">기초 형틀·철근</span></div>
+      <div id="stage-buttons"></div>
     </div>
+    <div id="stage-desc">기초 거푸집(형틀)과 철근 배근이 완료된 상태. 현재 사진과 일치하는 단계입니다.</div>
+    <div id="stage-slider-row">
+      <span style="color:var(--muted); font-size:11px;">단계</span>
+      <input type="range" id="stage-slider" min="0" max="6" step="0.001" value="1" />
+      <span class="val" id="stage-prog">1.00 / 6</span>
+    </div>
+  </section>
+
+  <div id="compass" title="방위 (상=북)">
+    <svg viewBox="-20 -20 40 40">
+      <circle r="18" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+      <polygon points="0,-15 4,0 0,2 -4,0" fill="#ff6b6b"/>
+      <polygon points="0,15 4,0 0,-2 -4,0" fill="#8c95a3"/>
+      <text class="n" x="0" y="-6" text-anchor="middle">N</text>
+    </svg>
   </div>
 
-  <div class="step-panel">
-    <div class="step-head">
-      <div class="num" id="stepNum">1</div>
-      <div class="ttl" id="stepTtl">기초 형틀·철근 (현재 사진 상태)</div>
-      <div class="meta" id="stepMeta">0 / 6</div>
-    </div>
-    <div class="step-desc" id="stepDesc">—</div>
-    <div class="step-slider">
-      <input id="stepRange" type="range" min="0" max="6" step="0.01" value="2.9">
-      <div class="step-dots" id="stepDots"></div>
-    </div>
+  <div id="fp-hint" class="panel">
+    <div><b>1인칭 모드</b> — 클릭하여 시작</div>
+    <div class="sm">WASD 이동 · 마우스 시선 · Shift 달리기 · ESC 종료</div>
   </div>
 
-  <div class="toast" id="toast"></div>
-</main>
+  <div id="loading"><div class="spinner"></div>씬 로딩 중...</div>
+</div>
 
 <script type="importmap">
-{ "imports":{
-  "three":"https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-}}
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
 </script>
 
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { Sky } from 'three/addons/objects/Sky.js';
 
-/* 평면도 데이터 재사용 (house-plan.html과 동일 치수) */
-const DESIGN={outer:{w:8000,d:4500,wall:100},
-  floors:{
-    1:{height:2300,walls:[
-      {a:[0,0],b:[8000,0]},{a:[8000,0],b:[8000,4500]},{a:[8000,4500],b:[0,4500]},{a:[0,4500],b:[0,0]},
-      {a:[2600,0],b:[2600,4500]},{a:[5000,0],b:[5000,4500]},
-      {a:[2600,2500],b:[5000,2500]},{a:[3700,0],b:[3700,2500]}],
-      openings:[
-        {wall:1,pos:1200,w:1500,h:1200,sill:900,type:"win"},
-        {wall:2,pos:5600,w:1800,h:1400,sill:800,type:"win"},
-        {wall:2,pos:2400,w:900,h:900,sill:1300,type:"win"},
-        {wall:3,pos:1800,w:900,h:2050,sill:0,type:"back"},
-        {wall:0,pos:2900,w:600,h:600,sill:1500,type:"win"},
-        {wall:1,pos:3100,w:900,h:2100,sill:0,type:"door"},
-        {wall:1,pos:400,w:1700,h:1400,sill:800,type:"win"}]},
-    2:{height:1800,walls:[
-      {a:[0,0],b:[8000,0]},{a:[8000,0],b:[8000,4500]},{a:[8000,4500],b:[0,4500]},{a:[0,4500],b:[0,0]},
-      {a:[5000,0],b:[5000,4500]}],
-      openings:[
-        {wall:1,pos:1500,w:1200,h:900,sill:400,type:"win"},
-        {wall:2,pos:5800,w:1000,h:700,sill:600,type:"win"}]}
-  }};
-const M=mm=>mm/1000;
+// ---------------------------------------------------------------------------
+// Constants (meters)
+// ---------------------------------------------------------------------------
+const H = {
+  // House
+  W: 8.0, D: 4.3,           // 1F footprint 8000 x 4300
+  WALL: 2.3,                // wall height
+  RIDGE: 1.8,               // gable rise above wall → total 4.1
+  ATTIC_W: 2.8, ATTIC_D: 3.1,
+  LAUNDRY_W: 0.9, LAUNDRY_D: 1.2, // small rear projection (3000mm long laundry zone marker)
+  FOUND_H: 0.6,             // raised foundation (concrete) above pad
+  // Site
+  PAD_W: 22, PAD_D: 18,     // raised pad
+  WORLD: 160,               // extent of ground plane
+};
 
-/* ============= 단계 정의 (사용자 명세 반영) ============= */
-const STAGES = [
-  {k:0, name:"0. 빈 대지",
-    desc:"성토 패드가 다져지고 진입로가 생긴 상태. 남쪽·동쪽은 논, 서쪽·북쪽은 산림. 노장길이 남쪽 모서리로 들어옴."},
-  {k:1, name:"1. 기초 형틀·철근 (사진 1~16)",
-    desc:"줄기초/매트기초 형틀을 짜고 피복·배근을 완료. 콘크리트 타설 직전. 현장 사진 초기 번호(1~16)의 상태."},
-  {k:2, name:"2. 콘크리트 타설 (스팬덱+75t RC)",
-    desc:"매트기초·동결선 아래 줄기초에 콘크리트를 타설, 양생. 상부에 앵커볼트와 베이스플레이트가 매립."},
-  {k:3, name:"3. 1층 경량철골 조립",
-    desc:"H형강·C형강 기둥·보로 1층 골조를 세우고 수평·수직을 잡아 고정. 바닥 데크(스팬덱) 설치."},
-  {k:4, name:"4. 2층(다락) 골조 상승 + 지붕 프레임 (사진 17~34 기준 상태)",
-    desc:"다락 층 기둥을 올리고 상부에 지붕 트러스/프레임을 세움. 전체 완성 높이까지 골조가 올라옴. 외장 패널 시공 직전."},
-  {k:5, name:"5. 외장 폭양판(PIR) + 지붕 마감",
-    desc:"PIR 샌드위치 패널로 외벽 외단열을 시공. 지붕에 아스팔트 슁글 또는 경량 금속지붕 마감."},
-  {k:6, name:"6. 창호·마감 완공 (다락방 3,000×3,300 포함)",
-    desc:"창호 설치, 외부 도장, 조경·담장·비석 세우기, 바닥 포장. 입주 준비 완료 상태."}
-];
+const COLORS = {
+  grassLight: 0x8bb75a,
+  grassDark:  0x5f8f3f,
+  rice:       0xd7c86a,       // ripe rice paddy
+  riceGreen:  0x7fa84a,
+  earth:      0xb79770,
+  earthDark:  0x8a6f54,
+  gravel:     0xbdb6a7,
+  stone:      0x8a8880,
+  stoneDark:  0x5f5c56,
+  concrete:   0xcccec8,
+  concreteDark:0xa6a69e,
+  rebar:      0x4e4a46,
+  wood:       0x9a6a3a,
+  steel:      0xbec3ca,
+  wallCream:  0xeee7d4,
+  wallSide:   0xd8cfb7,
+  roof:       0x2b2f36,       // dark grey/charcoal (지붕.jpg)
+  roofRidge:  0x1a1d22,
+  window:     0x72a7c7,
+  door:       0x5a3a24,
+  trunk:      0x5a3b23,
+  leafA:      0x4e8c3a,
+  leafB:      0x6ba94d,
+  leafC:      0x3b7a2f,
+  tea:        0x3f7a3b,       // green tea hedge
+  yew:        0x2a5a3a,       // 주목
+  monument:   0x4a4a52,       // granite
+  road:       0x4a4a4e,
+  roadLine:   0xe0dfd8,
+  water:      0x4e86a5,
+};
 
-/* ============= Three.js 셋업 ============= */
-const canvas = document.getElementById("c");
-const renderer = new THREE.WebGLRenderer({canvas, antialias:true, preserveDrawingBuffer:true});
-renderer.setPixelRatio(devicePixelRatio);
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+// ---------------------------------------------------------------------------
+// Renderer / Scene / Camera
+// ---------------------------------------------------------------------------
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color("#8aa8c6");
-scene.fog = new THREE.Fog("#aec6dc", 40, 220);
+scene.fog = new THREE.Fog(0xbcd4e6, 60, 220);
 
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
-camera.position.set(16, 11, 16);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(22, 15, 28);
+camera.lookAt(0, 2, 0);
 
-const orbit = new OrbitControls(camera, canvas);
-orbit.target.set(4, 1.5, 2.25);
-orbit.enableDamping=true;
-orbit.maxPolarAngle = Math.PI*0.49;
+// ---------------------------------------------------------------------------
+// Sky + Sun
+// ---------------------------------------------------------------------------
+const sky = new Sky();
+sky.scale.setScalar(4500);
+scene.add(sky);
+const skyU = sky.material.uniforms;
+skyU.turbidity.value = 4;
+skyU.rayleigh.value = 1.6;
+skyU.mieCoefficient.value = 0.005;
+skyU.mieDirectionalG.value = 0.8;
 
-/* 조명 */
-const hemi = new THREE.HemisphereLight(0xcfe6ff, 0x413a2a, 0.55); scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xfff2d8, 1.3);
-sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
-sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;
-sun.shadow.camera.far=120;
-scene.add(sun);
-scene.add(sun.target);
+const sun = new THREE.Vector3();
 
-/* sky dome */
-const sky=new THREE.Mesh(new THREE.SphereGeometry(300,32,16), new THREE.ShaderMaterial({
-  side:THREE.BackSide, uniforms:{top:{value:new THREE.Color("#4a7ab2")},bot:{value:new THREE.Color("#f8dcb2")}},
-  vertexShader:`varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-  fragmentShader:`varying vec3 p;uniform vec3 top;uniform vec3 bot;void main(){float h=clamp(normalize(p).y,0.,1.);gl_FragColor=vec4(mix(bot,top,pow(h,0.7)),1.);}`
-})); scene.add(sky);
+const sunLight = new THREE.DirectionalLight(0xfff2d9, 2.4);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.left = -40;
+sunLight.shadow.camera.right = 40;
+sunLight.shadow.camera.top = 40;
+sunLight.shadow.camera.bottom = -40;
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 160;
+sunLight.shadow.bias = -0.0003;
+sunLight.shadow.normalBias = 0.04;
+scene.add(sunLight);
+scene.add(sunLight.target);
 
-/* ============= 지형 ============= */
-// 성토 패드 중심을 (0,0,0) 근처로 두고, 집은 (DESIGN 중심)에 둠. 집 중심 (4, 2.25)
-// 패드는 넓고, 주변은 논밭 평지, 남쪽에 곡선 도로.
-const landGroup = new THREE.Group(); scene.add(landGroup);
+const hemi = new THREE.HemisphereLight(0xc9ddf1, 0x5c6a4a, 0.55);
+scene.add(hemi);
 
-// 대지 패드 (약간 고도)
-const padGeo = new THREE.CylinderGeometry(14, 16, 0.4, 48, 1);
-const padMat = new THREE.MeshStandardMaterial({color:"#7a6d55", roughness:0.95});
-const pad = new THREE.Mesh(padGeo, padMat);
-pad.position.set(4, 0.0, 2.25); pad.receiveShadow=true; landGroup.add(pad);
+const ambient = new THREE.AmbientLight(0x6a7a8f, 0.15);
+scene.add(ambient);
 
-// 주변 논밭(평평) — 저폴리 패치
-const fieldSize = 220;
-const field = new THREE.Mesh(new THREE.PlaneGeometry(fieldSize, fieldSize, 1,1), new THREE.MeshStandardMaterial({color:"#5a7a3e", roughness:1}));
-field.rotation.x=-Math.PI/2; field.position.y=-0.4; field.receiveShadow=true; landGroup.add(field);
+function setSunByHour(hour) {
+  // hour 5..20 → arc from east(low) → south-high → west(low)
+  const t = Math.min(1, Math.max(0, (hour - 5) / 15));
+  const elevation = Math.sin(t * Math.PI) * 65 + 3; // deg
+  // Sun azimuth: east (90°) at morning → south (180°) at noon → west (270°) at evening.
+  // In three-sky convention: azimuth 0 points +Z. We orient scene so +X = east, +Z = south.
+  // So azimuth in sky-shader terms = (azCompass - 0) where our east(+X) = 90 compass.
+  const azCompass = 90 + t * 180; // 90 → 270
+  // sky shader azimuth: 0 points -Z (north). so azShader = (azCompass + 180) mod 360
+  const azShader = (azCompass + 180) % 360;
 
-// 논 패치 (사각 블록)
-for(let i=0;i<36;i++){
-  const w = 8+Math.random()*18, d = 8+Math.random()*18;
-  const col = Math.random()<0.5? "#6a8a4a" : "#7a9a5a";
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w,d), new THREE.MeshStandardMaterial({color:col,roughness:1}));
-  m.rotation.x=-Math.PI/2;
-  // scatter outside pad
-  let x,z,ok=false;
-  for(let t=0;t<10;t++){ x=(Math.random()*2-1)*90; z=(Math.random()*2-1)*90; if(Math.hypot(x-4,z-2.25)>22){ok=true;break;} }
-  if(!ok) continue;
-  m.position.set(x, -0.39+Math.random()*0.02, z);
-  m.receiveShadow=true; landGroup.add(m);
+  const phi = THREE.MathUtils.degToRad(90 - elevation);
+  const theta = THREE.MathUtils.degToRad(azShader - 180);
+  sun.setFromSphericalCoords(1, phi, theta);
+  skyU.sunPosition.value.copy(sun);
+
+  // Light direction (compass → world coords)
+  const elRad = THREE.MathUtils.degToRad(elevation);
+  const azRad = THREE.MathUtils.degToRad(azCompass);
+  const r = 80;
+  const x = Math.sin(azRad) * Math.cos(elRad) * r; // east+
+  const z = -Math.cos(azRad) * Math.cos(elRad) * r; // north = -Z, south=+Z
+  // compass az 90 (east) → x=+r, z=0; az 180 (south) → x=0, z=+r; az 270 (west) → x=-r, z=0  ✓
+  const y = Math.sin(elRad) * r;
+  sunLight.position.set(x, Math.max(y, 4), z);
+  sunLight.target.position.set(0, 0, 0);
+
+  // Color temperature by time
+  const warm = Math.pow(1 - Math.sin(t * Math.PI), 1.5);
+  const col = new THREE.Color().setHSL(0.11 - warm * 0.07, 0.4 + warm * 0.4, 0.6 - warm * 0.1);
+  sunLight.color.copy(col);
+  sunLight.intensity = 0.6 + Math.sin(t * Math.PI) * 2.0;
+
+  const hemiCol = new THREE.Color().setHSL(0.58 - warm * 0.08, 0.4, 0.6 - warm * 0.15);
+  hemi.color.copy(hemiCol);
+  hemi.intensity = 0.3 + Math.sin(t * Math.PI) * 0.4;
+
+  // Fog hue
+  const fogCol = new THREE.Color().lerpColors(
+    new THREE.Color(0xff9a66), new THREE.Color(0xbcd4e6),
+    Math.min(1, Math.sin(t * Math.PI) * 1.5)
+  );
+  scene.fog.color.copy(fogCol);
+  renderer.setClearColor(fogCol);
+
+  // Sky turbidity
+  skyU.turbidity.value = 2.5 + (1 - Math.sin(t * Math.PI)) * 6;
+  skyU.rayleigh.value = 1.2 + (1 - Math.sin(t * Math.PI)) * 2.2;
 }
 
-// 산 능선 (저폴리 북/서)
-function mountain(x,z,w,h){
-  const g=new THREE.ConeGeometry(w, h, 6, 1);
-  const m=new THREE.Mesh(g, new THREE.MeshStandardMaterial({color:"#3f5544", roughness:1, flatShading:true}));
-  m.position.set(x,h/2-0.4,z); m.castShadow=true; m.receiveShadow=true;
-  landGroup.add(m);
-}
-for(let i=-5;i<=5;i++){ mountain(i*14+Math.random()*4, -70+Math.random()*8, 10+Math.random()*8, 8+Math.random()*6); }
-for(let i=-4;i<=4;i++){ mountain(-70+Math.random()*8, i*14+Math.random()*4, 9+Math.random()*7, 7+Math.random()*5); }
+// ---------------------------------------------------------------------------
+// Materials (shared)
+// ---------------------------------------------------------------------------
+const M = {
+  grassL: new THREE.MeshStandardMaterial({ color: COLORS.grassLight, roughness: 1 }),
+  grassD: new THREE.MeshStandardMaterial({ color: COLORS.grassDark, roughness: 1 }),
+  rice:   new THREE.MeshStandardMaterial({ color: COLORS.rice, roughness: 1 }),
+  riceG:  new THREE.MeshStandardMaterial({ color: COLORS.riceGreen, roughness: 1 }),
+  earth:  new THREE.MeshStandardMaterial({ color: COLORS.earth, roughness: 1 }),
+  earthD: new THREE.MeshStandardMaterial({ color: COLORS.earthDark, roughness: 1 }),
+  gravel: new THREE.MeshStandardMaterial({ color: COLORS.gravel, roughness: 1 }),
+  stone:  new THREE.MeshStandardMaterial({ color: COLORS.stone, roughness: 0.9 }),
+  stoneD: new THREE.MeshStandardMaterial({ color: COLORS.stoneDark, roughness: 0.9 }),
+  concrete: new THREE.MeshStandardMaterial({ color: COLORS.concrete, roughness: 0.85 }),
+  concreteD: new THREE.MeshStandardMaterial({ color: COLORS.concreteDark, roughness: 0.9 }),
+  rebar: new THREE.MeshStandardMaterial({ color: COLORS.rebar, roughness: 0.5, metalness: 0.6 }),
+  wood: new THREE.MeshStandardMaterial({ color: COLORS.wood, roughness: 0.9 }),
+  steel: new THREE.MeshStandardMaterial({ color: COLORS.steel, roughness: 0.4, metalness: 0.8 }),
+  wallCream: new THREE.MeshStandardMaterial({ color: COLORS.wallCream, roughness: 0.95 }),
+  wallSide: new THREE.MeshStandardMaterial({ color: COLORS.wallSide, roughness: 0.95 }),
+  roof: new THREE.MeshStandardMaterial({ color: COLORS.roof, roughness: 0.6, metalness: 0.1 }),
+  roofRidge: new THREE.MeshStandardMaterial({ color: COLORS.roofRidge, roughness: 0.6 }),
+  window: new THREE.MeshStandardMaterial({ color: COLORS.window, roughness: 0.2, metalness: 0.1, emissive: 0x203040, emissiveIntensity: 0.2 }),
+  door: new THREE.MeshStandardMaterial({ color: COLORS.door, roughness: 0.8 }),
+  trunk: new THREE.MeshStandardMaterial({ color: COLORS.trunk, roughness: 1 }),
+  leafA: new THREE.MeshStandardMaterial({ color: COLORS.leafA, roughness: 1 }),
+  leafB: new THREE.MeshStandardMaterial({ color: COLORS.leafB, roughness: 1 }),
+  leafC: new THREE.MeshStandardMaterial({ color: COLORS.leafC, roughness: 1 }),
+  tea: new THREE.MeshStandardMaterial({ color: COLORS.tea, roughness: 1 }),
+  yew: new THREE.MeshStandardMaterial({ color: COLORS.yew, roughness: 1 }),
+  monument: new THREE.MeshStandardMaterial({ color: COLORS.monument, roughness: 0.7, metalness: 0.1 }),
+  road: new THREE.MeshStandardMaterial({ color: COLORS.road, roughness: 1 }),
+  water: new THREE.MeshStandardMaterial({ color: COLORS.water, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.85 }),
+  dark: new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 }),
+};
 
-// 곡선 도로 (남쪽 모서리를 지나 북동으로 올라옴)
-const roadPath = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-90, -0.38, 40),
-  new THREE.Vector3(-30, -0.38, 20),
-  new THREE.Vector3(-5, -0.38, 12),
-  new THREE.Vector3(4, -0.38, 10),
-  new THREE.Vector3(20, -0.38, 2),
-  new THREE.Vector3(60, -0.38, -20),
-  new THREE.Vector3(100, -0.38, -40)
-]);
-{
-  const pts = roadPath.getPoints(200);
-  const g = new THREE.BufferGeometry();
-  const verts=[], norms=[], idx=[];
-  const w=2.6;
-  for(let i=0;i<pts.length;i++){
-    const p=pts[i], pn=pts[Math.min(i+1,pts.length-1)];
-    const dx=pn.x-p.x, dz=pn.z-p.z, l=Math.hypot(dx,dz)||1;
-    const nx=-dz/l, nz=dx/l;
-    verts.push(p.x+nx*w, p.y, p.z+nz*w);
-    verts.push(p.x-nx*w, p.y, p.z-nz*w);
-    norms.push(0,1,0,0,1,0);
-    if(i<pts.length-1){ const b=i*2; idx.push(b,b+1,b+2, b+1,b+3,b+2); }
+// receive shadows on big ground things
+[M.grassL, M.grassD, M.rice, M.riceG, M.earth, M.earthD, M.gravel, M.stone, M.stoneD, M.concrete, M.concreteD, M.road, M.wallCream, M.wallSide, M.roof].forEach(m => { /* default already lit */ });
+
+// ---------------------------------------------------------------------------
+// Terrain: wide plain with low ridge west/north, lower east/south (rice fields)
+// Using single plane with per-vertex displacement (low-poly look via noise).
+// ---------------------------------------------------------------------------
+function buildTerrain() {
+  const g = new THREE.PlaneGeometry(H.WORLD, H.WORLD, 100, 100);
+  g.rotateX(-Math.PI/2);
+  const pos = g.attributes.position;
+  const colors = [];
+  const base = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i); const z = pos.getZ(i);
+    // Base: east(+X)/south(+Z) low fields; west(-X)/north(-Z) higher ridge.
+    const westness = Math.max(0, -x) / 80;
+    const northness = Math.max(0, -z) / 80;
+    const ridge = Math.pow(Math.max(westness, northness), 1.4) * 14;
+
+    // Depress far east/south to make rice valley
+    const east = Math.max(0, x) / 80;
+    const south = Math.max(0, z) / 80;
+    const valley = -Math.pow(Math.max(east, south), 1.3) * 1.5;
+
+    // Keep pad area roughly flat (handled separately but blend)
+    const inPad = Math.max(Math.abs(x) / (H.PAD_W/2), Math.abs(z) / (H.PAD_D/2));
+    const padBlend = Math.max(0, 1 - inPad);
+
+    // Noise
+    const n = Math.sin(x * 0.21) * Math.cos(z * 0.17) * 0.5 + Math.sin(x * 0.07 + z * 0.11) * 0.9;
+
+    let y = ridge + valley + n * 0.4;
+    y = THREE.MathUtils.lerp(y, 0.0, padBlend * padBlend);
+
+    pos.setY(i, y);
+
+    // Vertex color: more green on ridges, more rice/earth on valleys
+    let r, g1, b;
+    if (y > 3) { // forest ridge
+      base.setHex(COLORS.leafC); r = base.r; g1 = base.g; b = base.b;
+    } else if (y > 0.6) { // grassland
+      base.setHex(COLORS.grassDark); r = base.r; g1 = base.g; b = base.b;
+    } else if (y > -0.3) { // pad grass
+      base.setHex(COLORS.grassLight); r = base.r; g1 = base.g; b = base.b;
+    } else { // low — paddy/earth
+      base.setHex(COLORS.rice); r = base.r; g1 = base.g; b = base.b;
+    }
+    // small random variation
+    const jitter = (Math.sin(i * 12.9898) * 43758.5453) % 1;
+    const j = (jitter + 1) * 0.5 * 0.08 - 0.04;
+    colors.push(r + j, g1 + j, b + j);
   }
-  g.setAttribute("position", new THREE.Float32BufferAttribute(verts,3));
-  g.setAttribute("normal", new THREE.Float32BufferAttribute(norms,3));
-  g.setIndex(idx);
-  const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({color:"#3a3832", roughness:0.95}));
-  mesh.receiveShadow=true; landGroup.add(mesh);
-  // 중앙선
-  const lmesh=new THREE.Mesh(new THREE.BufferGeometry().setFromPoints(pts.map(p=>new THREE.Vector3(p.x,p.y+0.01,p.z))), new THREE.LineDashedMaterial({color:"#f0c060", dashSize:0.8, gapSize:0.6}));
-  lmesh.computeLineDistances(); landGroup.add(lmesh);
+  g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  g.computeVertexNormals();
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 });
+  const mesh = new THREE.Mesh(g, mat);
+  mesh.receiveShadow = true;
+  return mesh;
 }
+const terrain = buildTerrain();
+scene.add(terrain);
 
-// 진입로 (대지 남쪽에서 패드 위로)
+// ---------------------------------------------------------------------------
+// Pad (raised flat earth with concrete-block retaining edges)
+// Pad top at y = 0.0, surrounding terrain blended to it.
+// Pad outline slightly offset so building sits comfortably within.
+// ---------------------------------------------------------------------------
+const padGroup = new THREE.Group();
+scene.add(padGroup);
+
+// Pad top (gravel/earth)
 {
-  const g = new THREE.PlaneGeometry(4, 10);
-  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({color:"#6a5e48", roughness:1}));
-  m.rotation.x=-Math.PI/2; m.position.set(4, -0.38, 10); m.receiveShadow=true; landGroup.add(m);
+  const g = new THREE.BoxGeometry(H.PAD_W, 0.4, H.PAD_D);
+  const m = new THREE.MeshStandardMaterial({ color: COLORS.earth, roughness: 1 });
+  const pad = new THREE.Mesh(g, m);
+  pad.position.y = -0.2;
+  pad.receiveShadow = true;
+  padGroup.add(pad);
 }
 
-// 블록 옹벽/돌담 (패드 남/동 가장자리)
-function stoneWall(points,h=0.6){
-  const g=new THREE.Group();
-  for(let i=0;i<points.length-1;i++){
-    const a=points[i], b=points[i+1];
-    const dx=b[0]-a[0], dz=b[1]-a[1], len=Math.hypot(dx,dz);
-    const stones = Math.max(1,Math.floor(len/0.9));
-    for(let s=0;s<stones;s++){
-      const t=(s+0.5)/stones;
-      const x=a[0]+dx*t, z=a[1]+dz*t;
-      const sw=0.6+Math.random()*0.4;
-      const sh=h*(0.7+Math.random()*0.5);
-      const sd=0.4+Math.random()*0.3;
-      const m = new THREE.Mesh(new THREE.BoxGeometry(sw,sh,sd),
-        new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(0.09,0.1,0.35+Math.random()*0.15),roughness:1}));
-      m.position.set(x, sh/2-0.2, z);
-      m.rotation.y = Math.atan2(dz,dx)+(Math.random()-.5)*0.3;
-      m.castShadow=true; m.receiveShadow=true; g.add(m);
+// Pad slope edges (east+south lower)
+function slopeStrip(w, d, dropY, offsetX, offsetZ, rot=0) {
+  const g = new THREE.BoxGeometry(w, 0.08, d);
+  const mesh = new THREE.Mesh(g, M.grassL);
+  mesh.position.set(offsetX, dropY, offsetZ);
+  mesh.rotation.z = rot;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
+// Retaining block wall around pad edges (visible from road)
+function retainingWall() {
+  const grp = new THREE.Group();
+  const blockW = 0.6, blockH = 0.4, blockD = 0.4;
+  const geo = new THREE.BoxGeometry(blockW, blockH, blockD);
+  const mats = [M.stone, M.stoneD];
+
+  // Place along south edge (from SW corner to SE), two courses tall
+  const southZ = H.PAD_D/2 + 0.2;
+  const westX = -H.PAD_W/2 - 0.2;
+  const eastX =  H.PAD_W/2 + 0.2;
+
+  // South edge
+  const southLen = H.PAD_W + 1.2;
+  const nS = Math.ceil(southLen / blockW);
+  for (let c = 0; c < 2; c++) {
+    for (let i = 0; i < nS; i++) {
+      const m = mats[(i + c) % 2];
+      const b = new THREE.Mesh(geo, m);
+      b.position.set(-southLen/2 + i * blockW + blockW/2, -0.4 + c * blockH + blockH/2, southZ);
+      b.castShadow = true; b.receiveShadow = true;
+      // offset alternate course
+      if (c === 1) b.position.x += blockW/2;
+      grp.add(b);
     }
   }
-  landGroup.add(g); return g;
+  // East edge
+  const eastLen = H.PAD_D + 1.0;
+  const nE = Math.ceil(eastLen / blockW);
+  for (let c = 0; c < 2; c++) {
+    for (let i = 0; i < nE; i++) {
+      const m = mats[(i + c) % 2];
+      const b = new THREE.Mesh(geo, m);
+      b.position.set(eastX, -0.4 + c * blockH + blockH/2, -eastLen/2 + i * blockW + blockW/2);
+      b.rotation.y = Math.PI/2;
+      b.castShadow = true; b.receiveShadow = true;
+      if (c === 1) b.position.z += blockW/2;
+      grp.add(b);
+    }
+  }
+  // West edge (lower; backs onto hill)
+  for (let c = 0; c < 1; c++) {
+    for (let i = 0; i < nE; i++) {
+      const b = new THREE.Mesh(geo, mats[i % 2]);
+      b.position.set(westX, -0.4 + c * blockH + blockH/2, -eastLen/2 + i * blockW + blockW/2);
+      b.rotation.y = Math.PI/2;
+      b.castShadow = true; b.receiveShadow = true;
+      grp.add(b);
+    }
+  }
+  // North edge (short, backs to hill)
+  const northZ = -H.PAD_D/2 - 0.2;
+  for (let i = 0; i < nS; i++) {
+    const b = new THREE.Mesh(geo, mats[i % 2]);
+    b.position.set(-southLen/2 + i * blockW + blockW/2, -0.4 + 0 * blockH + blockH/2, northZ);
+    b.castShadow = true; b.receiveShadow = true;
+    grp.add(b);
+  }
+  return grp;
 }
-stoneWall([[-10,15],[18,15],[18,-10]], 0.5);
+padGroup.add(retainingWall());
 
-/* 전봇대 + 가로등 */
-function pole(x,z){
-  const g=new THREE.Group();
-  const t=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,5,8), new THREE.MeshStandardMaterial({color:"#8c7a60"}));
-  t.position.y=2.5; t.castShadow=true; g.add(t);
-  const arm=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.08,0.08), new THREE.MeshStandardMaterial({color:"#555"}));
-  arm.position.set(0.5,4.6,0); g.add(arm);
-  const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), new THREE.MeshStandardMaterial({color:"#fff6c0",emissive:"#f6c060",emissiveIntensity:0.6}));
-  lamp.position.set(1.1,4.4,0); g.add(lamp);
-  g.position.set(x,-0.4,z); landGroup.add(g);
-  // 전선
+// ---------------------------------------------------------------------------
+// Road: curved approach from SW corner, running along south edge of pad.
+// Represented as a tube along a curve, plus center line.
+// ---------------------------------------------------------------------------
+function buildRoad() {
+  const grp = new THREE.Group();
+  const pts = [];
+  for (let i = 0; i <= 40; i++) {
+    const t = i / 40;
+    // from far SW (-55, -2, 30) curving east then NE skirting south of pad to east side
+    const x = THREE.MathUtils.lerp(-55, 40, t) + Math.sin(t * Math.PI) * 6;
+    const z = THREE.MathUtils.lerp(28, 8, t) - Math.sin(t * Math.PI) * 4;
+    const y = -0.9 + Math.pow(t, 1.6) * 0.3; // climb slightly
+    pts.push(new THREE.Vector3(x, y, z));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.3);
+  // road ribbon
+  const roadWidth = 3.2;
+  const divisions = 160;
+  const positions = [];
+  const indices = [];
+  const uvs = [];
+  for (let i = 0; i <= divisions; i++) {
+    const t = i / divisions;
+    const p = curve.getPointAt(t);
+    const tan = curve.getTangentAt(t);
+    const normal = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    const l = p.clone().addScaledVector(normal, roadWidth/2);
+    const r = p.clone().addScaledVector(normal, -roadWidth/2);
+    positions.push(l.x, l.y + 0.01, l.z);
+    positions.push(r.x, r.y + 0.01, r.z);
+    uvs.push(0, t * 20); uvs.push(1, t * 20);
+    if (i < divisions) {
+      const a = i * 2, b = a + 1, c = a + 2, d = a + 3;
+      indices.push(a, b, c, b, d, c);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  g.setIndex(indices);
+  g.computeVertexNormals();
+  const road = new THREE.Mesh(g, M.road);
+  road.receiveShadow = true;
+  grp.add(road);
+  // store curve for lamp placement
+  grp.userData.curve = curve;
+  return grp;
 }
-pole(-10,8); pole(10,-6); pole(30,-14);
+const roadGroup = buildRoad();
+scene.add(roadGroup);
 
-/* 개울 (서쪽) */
-{
-  const g = new THREE.Mesh(new THREE.PlaneGeometry(60,1.4), new THREE.MeshStandardMaterial({color:"#4a7aa6", roughness:0.3, metalness:0.1}));
-  g.rotation.x=-Math.PI/2; g.position.set(-30,-0.37,-5); g.receiveShadow=true; landGroup.add(g);
+// Utility poles + street lamps along the curve
+function buildPolesAndLamps(curve) {
+  const grp = new THREE.Group();
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x9a9893, roughness: 0.8 });
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.6 });
+  const lampArmMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6 });
+  const lampGlass = new THREE.MeshStandardMaterial({ color: 0xfff1b5, emissive: 0xfff1b5, emissiveIntensity: 0.5, roughness: 0.3 });
+
+  const poleCount = 5;
+  const polePts = [];
+  for (let i = 0; i < poleCount; i++) {
+    const t = 0.1 + i / (poleCount - 1) * 0.85;
+    const p = curve.getPointAt(t);
+    const tan = curve.getTangentAt(t);
+    const n = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    const side = (i % 2 === 0 ? 1 : -1);
+    const base = p.clone().addScaledVector(n, side * (3.2/2 + 1.6));
+    base.y = Math.max(-0.9, base.y);
+    polePts.push(base);
+
+    // pole
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 7, 8), poleMat);
+    pole.position.set(base.x, base.y + 3.5, base.z);
+    pole.castShadow = true;
+    grp.add(pole);
+
+    // lamp arm
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.08, 0.08), lampArmMat);
+    arm.position.set(base.x + (-side) * 0.65, base.y + 6.4, base.z);
+    grp.add(arm);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.18, 0.3), lampArmMat);
+    head.position.set(base.x + (-side) * 1.25, base.y + 6.3, base.z);
+    grp.add(head);
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.08, 0.26), lampGlass);
+    glass.position.set(base.x + (-side) * 1.25, base.y + 6.19, base.z);
+    grp.add(glass);
+  }
+  // wires
+  for (let i = 0; i < polePts.length - 1; i++) {
+    const a = polePts[i].clone(); a.y += 6.6;
+    const b = polePts[i+1].clone(); b.y += 6.6;
+    const mid = a.clone().lerp(b, 0.5); mid.y -= 0.4;
+    const curve2 = new THREE.QuadraticBezierCurve3(a, mid, b);
+    const g = new THREE.BufferGeometry().setFromPoints(curve2.getPoints(16));
+    grp.add(new THREE.Line(g, wireMat));
+  }
+  return grp;
+}
+scene.add(buildPolesAndLamps(roadGroup.userData.curve));
+
+// ---------------------------------------------------------------------------
+// Rice paddies & field plots east/south of pad
+// ---------------------------------------------------------------------------
+function buildPaddies() {
+  const grp = new THREE.Group();
+  const plots = [
+    // East side plots
+    { x: 24, z: -8, w: 14, d: 10, mat: M.rice },
+    { x: 24, z:  6, w: 14, d: 12, mat: M.riceG },
+    { x: 42, z: -2, w: 14, d: 20, mat: M.rice },
+    { x: 42, z: 20, w: 14, d: 14, mat: M.riceG },
+    // South side plots
+    { x: -8, z: 26, w: 12, d: 14, mat: M.rice },
+    { x:  8, z: 30, w: 16, d: 14, mat: M.riceG },
+    { x: 26, z: 32, w: 20, d: 14, mat: M.rice },
+  ];
+  for (const p of plots) {
+    // slight depression floor
+    const g = new THREE.BoxGeometry(p.w, 0.08, p.d);
+    const m = new THREE.Mesh(g, p.mat);
+    m.position.set(p.x, -1.4, p.z);
+    m.receiveShadow = true;
+    grp.add(m);
+    // ridges (논두렁)
+    const ridgeMat = M.earthD;
+    const n = 3;
+    for (let i = 1; i < n; i++) {
+      const r = new THREE.Mesh(new THREE.BoxGeometry(p.w, 0.12, 0.18), ridgeMat);
+      r.position.set(p.x, -1.3, p.z - p.d/2 + i * (p.d/n));
+      grp.add(r);
+    }
+    // border ridges
+    const bA = new THREE.Mesh(new THREE.BoxGeometry(p.w, 0.2, 0.25), ridgeMat);
+    bA.position.set(p.x, -1.25, p.z - p.d/2);
+    grp.add(bA);
+    const bB = new THREE.Mesh(new THREE.BoxGeometry(p.w, 0.2, 0.25), ridgeMat);
+    bB.position.set(p.x, -1.25, p.z + p.d/2);
+    grp.add(bB);
+    const bC = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, p.d), ridgeMat);
+    bC.position.set(p.x - p.w/2, -1.25, p.z);
+    grp.add(bC);
+    const bD = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, p.d), ridgeMat);
+    bD.position.set(p.x + p.w/2, -1.25, p.z);
+    grp.add(bD);
+  }
+  return grp;
+}
+const paddiesGrp = buildPaddies();
+scene.add(paddiesGrp);
+
+// ---------------------------------------------------------------------------
+// Small creek/stream running along south edge of fields
+// ---------------------------------------------------------------------------
+function buildCreek() {
+  const grp = new THREE.Group();
+  const pts = [];
+  for (let i = 0; i <= 30; i++) {
+    const t = i / 30;
+    const x = THREE.MathUtils.lerp(-45, 55, t);
+    const z = 40 + Math.sin(t * Math.PI * 2) * 2.2;
+    pts.push(new THREE.Vector3(x, -1.6, z));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const w = 1.8;
+  const positions = []; const indices = []; const uvs = [];
+  const div = 80;
+  for (let i = 0; i <= div; i++) {
+    const t = i / div;
+    const p = curve.getPointAt(t);
+    const tan = curve.getTangentAt(t);
+    const n = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    const l = p.clone().addScaledVector(n, w/2);
+    const r = p.clone().addScaledVector(n, -w/2);
+    positions.push(l.x, l.y, l.z, r.x, r.y, r.z);
+    uvs.push(0, t * 10, 1, t * 10);
+    if (i < div) { const a = i*2; indices.push(a, a+1, a+2, a+1, a+3, a+2); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  g.setIndex(indices); g.computeVertexNormals();
+  const water = new THREE.Mesh(g, M.water);
+  water.receiveShadow = true;
+  grp.add(water);
+  return grp;
+}
+scene.add(buildCreek());
+
+// ---------------------------------------------------------------------------
+// Mountain silhouette backdrop (low-poly) ringing far distance
+// ---------------------------------------------------------------------------
+function buildMountains() {
+  const grp = new THREE.Group();
+  const mat1 = new THREE.MeshStandardMaterial({ color: 0x3f5d4b, flatShading: true, roughness: 1 });
+  const mat2 = new THREE.MeshStandardMaterial({ color: 0x4a6b58, flatShading: true, roughness: 1 });
+  function ridge(radius, segs, maxH, mat, yOff) {
+    const positions = []; const indices = [];
+    const base = -2;
+    for (let i = 0; i <= segs; i++) {
+      const a = (i / segs) * Math.PI * 2;
+      const h = (Math.sin(i * 2.1) + Math.cos(i * 0.7) + 2) / 4 * maxH + 4;
+      positions.push(Math.cos(a) * radius, base, Math.sin(a) * radius);
+      positions.push(Math.cos(a) * radius, base + h, Math.sin(a) * radius);
+    }
+    for (let i = 0; i < segs; i++) {
+      const a = i*2; indices.push(a, a+1, a+2, a+1, a+3, a+2);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    g.setIndex(indices); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mat);
+    m.position.y = yOff;
+    return m;
+  }
+  grp.add(ridge(95, 48, 14, mat2, 0));
+  grp.add(ridge(75, 36, 10, mat1, 0));
+  return grp;
+}
+scene.add(buildMountains());
+
+// Low ridge of forest just west/north of pad (close), as part of terrain decoration
+function buildCloseRidgeTrees() {
+  const grp = new THREE.Group();
+  const positions = [];
+  // west ridge
+  for (let i = 0; i < 60; i++) {
+    const x = -14 - Math.random() * 25;
+    const z = -30 + Math.random() * 60;
+    const h = terrainHeightAt(x, z);
+    if (h > 1.2) positions.push([x, h, z, 0.6 + Math.random() * 1.8]);
+  }
+  // north ridge
+  for (let i = 0; i < 40; i++) {
+    const x = -24 + Math.random() * 48;
+    const z = -14 - Math.random() * 20;
+    const h = terrainHeightAt(x, z);
+    if (h > 1.2) positions.push([x, h, z, 0.6 + Math.random() * 1.8]);
+  }
+  const trunkGeo = new THREE.CylinderGeometry(0.12, 0.18, 1.2, 5);
+  const leafGeo = new THREE.ConeGeometry(1.0, 2.6, 6);
+  for (const [x,y,z,s] of positions) {
+    const trunk = new THREE.Mesh(trunkGeo, M.trunk);
+    trunk.position.set(x, y + 0.6, z);
+    trunk.scale.setScalar(s);
+    trunk.castShadow = true;
+    grp.add(trunk);
+    const leaf = new THREE.Mesh(leafGeo, (Math.random() < 0.5 ? M.leafA : M.leafC));
+    leaf.position.set(x, y + 1.3 + s * 1.3, z);
+    leaf.scale.setScalar(s);
+    leaf.castShadow = true;
+    grp.add(leaf);
+  }
+  return grp;
 }
 
-/* ============= 집 (단계별 가변) ============= */
+function terrainHeightAt(x, z) {
+  // approximate the terrain fn
+  const westness = Math.max(0, -x) / 80;
+  const northness = Math.max(0, -z) / 80;
+  const ridge = Math.pow(Math.max(westness, northness), 1.4) * 14;
+  const east = Math.max(0, x) / 80;
+  const south = Math.max(0, z) / 80;
+  const valley = -Math.pow(Math.max(east, south), 1.3) * 1.5;
+  const inPad = Math.max(Math.abs(x) / (H.PAD_W/2), Math.abs(z) / (H.PAD_D/2));
+  const padBlend = Math.max(0, 1 - inPad);
+  const n = Math.sin(x * 0.21) * Math.cos(z * 0.17) * 0.5 + Math.sin(x * 0.07 + z * 0.11) * 0.9;
+  let y = ridge + valley + n * 0.4;
+  y = THREE.MathUtils.lerp(y, 0.0, padBlend * padBlend);
+  return y;
+}
+scene.add(buildCloseRidgeTrees());
+
+// ---------------------------------------------------------------------------
+// Village houses (south-west side across the road) — small gable houses
+// ---------------------------------------------------------------------------
+function buildVillage() {
+  const grp = new THREE.Group();
+  const houses = [
+    { x: -30, z: 24, w: 6, d: 5, h: 3, rot: 0.3 },
+    { x: -22, z: 29, w: 7, d: 5, h: 3, rot: -0.2 },
+    { x: -36, z: 18, w: 5, d: 4, h: 2.6, rot: 0.5 },
+    { x: -14, z: 32, w: 6, d: 5, h: 3, rot: -0.1 },
+    { x: -42, z: 26, w: 7, d: 6, h: 3.2, rot: 0.8 },
+  ];
+  for (const h of houses) {
+    const g = new THREE.Group();
+    // walls
+    const walls = new THREE.Mesh(new THREE.BoxGeometry(h.w, h.h, h.d), new THREE.MeshStandardMaterial({ color: 0xd8d0bd, roughness: 1 }));
+    walls.position.y = h.h/2;
+    walls.castShadow = true; walls.receiveShadow = true;
+    g.add(walls);
+    // gable roof via two tilted boxes
+    const slope = 1.0;
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x4a3a30, roughness: 0.9 });
+    const r1 = new THREE.Mesh(new THREE.BoxGeometry(h.w*0.6, 0.1, h.d*1.1), roofMat);
+    r1.position.set(0, h.h + slope/2, h.d/4);
+    r1.rotation.x = -Math.PI/6;
+    r1.scale.x = 1.8;
+    g.add(r1);
+    const r2 = r1.clone();
+    r2.rotation.x = Math.PI/6;
+    r2.position.z = -h.d/4;
+    g.add(r2);
+    // tiny windows
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), M.window);
+    win.position.set(0, h.h*0.55, h.d/2 + 0.03);
+    g.add(win);
+    g.position.set(h.x, terrainHeightAt(h.x, h.z) + 0.1, h.z);
+    g.rotation.y = h.rot;
+    grp.add(g);
+  }
+  return grp;
+}
+scene.add(buildVillage());
+
+// ---------------------------------------------------------------------------
+// HOUSE — the real building (stage-dependent)
+// ---------------------------------------------------------------------------
+// Center at origin; FRONT faces +X (east). Width = W along Z, depth = D along X.
+// Actually convention: facade is on +X side.
+// We'll set: house local axes:
+//   X axis = east/west (depth 4.3m)        → range [-D/2, +D/2]
+//   Z axis = north/south (width 8.0m)      → range [-W/2, +W/2]
+// So the long dimension (8m) runs N-S, front(east face) is the +X face.
+// This matches the floorplan: 8m facade faces east.
 const houseGroup = new THREE.Group();
-houseGroup.position.set(0,0,0);
+houseGroup.position.y = 0;
 scene.add(houseGroup);
 
-/* 집은 평면도 좌표를 그대로 (0,0,0)~(8m,-,4.5m)로 배치
-   정면=동쪽(+X 쪽을 동쪽으로 가정): 평면도 우측 = +X.
-   사용자 요구: 정면이 동쪽. 월드 축 가정: +X = 동, +Z = 남 (북 -Z). */
+// ---- Foundation (always visible from stage >=1 as formwork, >=2 as concrete) ----
+const foundationGroup = new THREE.Group();
+houseGroup.add(foundationGroup);
 
-const H = {
-  base: new THREE.Group(),
-  rebar: new THREE.Group(),
-  slab: new THREE.Group(),
-  steel: new THREE.Group(),
-  atticFrame: new THREE.Group(),
-  roofFrame: new THREE.Group(),
-  cladding: new THREE.Group(),
-  roofFinish: new THREE.Group(),
-  windows: new THREE.Group(),
-  interior: new THREE.Group(),
-};
-Object.values(H).forEach(g=>houseGroup.add(g));
+// The raised concrete slab/stem (stage 2+)
+const slab = new THREE.Mesh(
+  new THREE.BoxGeometry(H.D + 0.3, H.FOUND_H, H.W + 0.3),
+  M.concrete
+);
+slab.position.y = H.FOUND_H/2;
+slab.castShadow = true; slab.receiveShadow = true;
+foundationGroup.add(slab);
 
-// 집 중심을 (4, 2.25) 배치 — 평면 좌표가 그대로 매칭
-function addToStage(parent, mesh){ mesh.castShadow=true; mesh.receiveShadow=true; parent.add(mesh); }
-
-/* 기초 형틀/배근 */
+// Formwork planks around slab (stage 1)
+const formworkGroup = new THREE.Group();
+foundationGroup.add(formworkGroup);
 {
-  const w=M(DESIGN.outer.w), d=M(DESIGN.outer.d);
-  // 매트기초 터파기 (움푹한 면)
-  const dig = new THREE.Mesh(new THREE.BoxGeometry(w+0.6, 0.3, d+0.6), new THREE.MeshStandardMaterial({color:"#4a3b2a", roughness:1}));
-  dig.position.set(w/2, -0.15, d/2); H.base.add(dig); dig.receiveShadow=true;
-  // 형틀 거푸집 (목재)
-  const woodMat = new THREE.MeshStandardMaterial({color:"#a07a4a", roughness:0.8});
-  function form(x,z,sw,sd,h=0.4){
-    const m = new THREE.Mesh(new THREE.BoxGeometry(sw,h,sd), woodMat);
-    m.position.set(x, h/2-0.05, z); m.castShadow=true; H.base.add(m); return m;
+  const plankMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.9 });
+  const plankGeoLong = new THREE.BoxGeometry(H.W + 0.4, 0.6, 0.04);
+  const plankGeoShort = new THREE.BoxGeometry(H.D + 0.4, 0.6, 0.04);
+  const west = new THREE.Mesh(plankGeoLong, plankMat);
+  west.rotation.y = Math.PI/2;
+  west.position.set(-H.D/2 - 0.15, 0.3, 0);
+  const east = west.clone(); east.position.x = H.D/2 + 0.15;
+  const north = new THREE.Mesh(plankGeoShort, plankMat);
+  north.position.set(0, 0.3, -H.W/2 - 0.15);
+  const south = north.clone(); south.position.z = H.W/2 + 0.15;
+  [west,east,north,south].forEach(p => { p.castShadow = true; formworkGroup.add(p); });
+  // vertical supports (sticks)
+  for (let i = -4; i <= 4; i++) {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.9, 0.05), plankMat);
+    s.position.set(-H.D/2 - 0.15, 0.3, i * 1);
+    formworkGroup.add(s);
+    const s2 = s.clone(); s2.position.x = H.D/2 + 0.15; formworkGroup.add(s2);
   }
-  // 외곽 거푸집 테두리
-  form(w/2, 0, w+0.3, 0.08);
-  form(w/2, d, w+0.3, 0.08);
-  form(0, d/2, 0.08, d+0.3);
-  form(w, d/2, 0.08, d+0.3);
-  // 배근 격자
-  const barMat = new THREE.MeshStandardMaterial({color:"#8a4a2a", roughness:0.6, metalness:0.5});
-  for(let i=0;i<=8;i++){
-    const x = (i/8)*w;
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, d), barMat);
-    b.position.set(x, 0.08, d/2); H.rebar.add(b);
+  // rebar grid on top (shown stage 1)
+  const rebarGroup = new THREE.Group();
+  rebarGroup.name = 'rebar';
+  for (let i = -4; i <= 4; i++) {
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, H.D + 0.2, 6), M.rebar);
+    r.rotation.z = Math.PI/2;
+    r.position.set(0, 0.56, i * 1);
+    rebarGroup.add(r);
   }
-  for(let i=0;i<=5;i++){
-    const z = (i/5)*d;
-    const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.03, 0.03), barMat);
-    b.position.set(w/2, 0.08, z); H.rebar.add(b);
+  for (let i = -2; i <= 2; i++) {
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, H.W + 0.2, 6), M.rebar);
+    r.position.set(i * 1, 0.56, 0);
+    rebarGroup.add(r);
+  }
+  formworkGroup.add(rebarGroup);
+  // small central standpipes
+  for (const px of [-1.5, 0.5]) {
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 10), new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5 }));
+    pipe.position.set(px, 0.9, 0);
+    formworkGroup.add(pipe);
   }
 }
 
-/* 콘크리트 슬라브 */
+// Dirt pit under formwork (stage 1 only — the pit before concrete pour)
+const dirtPit = new THREE.Mesh(
+  new THREE.BoxGeometry(H.D + 0.2, 0.1, H.W + 0.2),
+  M.earthD
+);
+dirtPit.position.y = 0.05;
+dirtPit.receiveShadow = true;
+foundationGroup.add(dirtPit);
+
+// ---- Steel frame (stages 3-4+): light-gauge steel per site photos ----
+const frameGroup = new THREE.Group();
+houseGroup.add(frameGroup);
 {
-  const w=M(DESIGN.outer.w), d=M(DESIGN.outer.d);
-  const slab = new THREE.Mesh(new THREE.BoxGeometry(w, 0.3, d), new THREE.MeshStandardMaterial({color:"#b5b2ab", roughness:0.9}));
-  slab.position.set(w/2, 0.1, d/2); addToStage(H.slab, slab);
-  // 앵커볼트
-  const anchors=[[0.2,0.2],[2.6,0.2],[5.0,0.2],[7.8,0.2],[0.2,4.3],[2.6,4.3],[5.0,4.3],[7.8,4.3]];
-  anchors.forEach(([x,z])=>{
-    const a=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,0.1,8), new THREE.MeshStandardMaterial({color:"#333", metalness:0.9, roughness:0.3}));
-    a.position.set(x,0.3,z); H.slab.add(a);
-  });
+  const colMat = M.steel;
+  const colGeo = new THREE.BoxGeometry(0.06, H.WALL, 0.06);
+  // perimeter columns
+  const colX = [-H.D/2, H.D/2];
+  const colZ = [-H.W/2, -H.W/2 + H.W/4, 0, H.W/4, H.W/2];
+  for (const x of colX) for (const z of colZ) {
+    const c = new THREE.Mesh(colGeo, colMat);
+    c.position.set(x, H.FOUND_H + H.WALL/2, z);
+    c.castShadow = true;
+    frameGroup.add(c);
+  }
+  // top plate (ring beam)
+  const beamLong = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, H.W), colMat);
+  beamLong.position.set(-H.D/2, H.FOUND_H + H.WALL, 0); frameGroup.add(beamLong);
+  const beamLong2 = beamLong.clone(); beamLong2.position.x = H.D/2; frameGroup.add(beamLong2);
+  const beamShort = new THREE.Mesh(new THREE.BoxGeometry(H.D, 0.1, 0.08), colMat);
+  beamShort.position.set(0, H.FOUND_H + H.WALL, -H.W/2); frameGroup.add(beamShort);
+  const beamShort2 = beamShort.clone(); beamShort2.position.z = H.W/2; frameGroup.add(beamShort2);
+  // diagonal braces
+  for (const z of [-H.W/2 + 0.4, H.W/2 - 0.4]) {
+    const diag = new THREE.Mesh(new THREE.BoxGeometry(0.06, Math.hypot(H.D, H.WALL) * 0.9, 0.06), colMat);
+    diag.position.set(0, H.FOUND_H + H.WALL/2, z);
+    diag.rotation.z = Math.atan2(H.WALL, H.D);
+    frameGroup.add(diag);
+  }
+  // floor joists
+  for (let i = -3; i <= 3; i++) {
+    const j = new THREE.Mesh(new THREE.BoxGeometry(H.D, 0.08, 0.06), colMat);
+    j.position.set(0, H.FOUND_H + 0.05, i * (H.W/8));
+    frameGroup.add(j);
+  }
 }
 
-/* 1층 경량철골 */
+// ---- Trusses / roof frame (stage 4+) ----
+const trussGroup = new THREE.Group();
+houseGroup.add(trussGroup);
 {
-  const h1=M(2300);
-  const colMat = new THREE.MeshStandardMaterial({color:"#2b3240", roughness:0.5, metalness:0.6});
-  const cols = [[0.1,0.1],[8-0.1,0.1],[0.1,4.4],[8-0.1,4.4],[2.6,0.1],[5.0,0.1],[2.6,4.4],[5.0,4.4]];
-  cols.forEach(([x,z])=>{
-    const c=new THREE.Mesh(new THREE.BoxGeometry(0.12,h1,0.12), colMat);
-    c.position.set(x, 0.25+h1/2, z); addToStage(H.steel, c);
-  });
-  // 보 (상부/중부)
-  function beam(x1,z1,x2,z2,y){
-    const dx=x2-x1, dz=z2-z1, len=Math.hypot(dx,dz);
-    const b=new THREE.Mesh(new THREE.BoxGeometry(len,0.14,0.1), colMat);
-    b.position.set((x1+x2)/2, y, (z1+z2)/2);
-    b.rotation.y = -Math.atan2(dz,dx);
-    addToStage(H.steel, b);
+  const trussMat = M.steel;
+  const nTrusses = 5;
+  for (let i = 0; i < nTrusses; i++) {
+    const z = -H.W/2 + i * (H.W / (nTrusses - 1));
+    const g = new THREE.Group();
+    // bottom chord
+    const bc = new THREE.Mesh(new THREE.BoxGeometry(H.D + 0.2, 0.06, 0.06), trussMat);
+    bc.position.y = H.FOUND_H + H.WALL + 0.03;
+    g.add(bc);
+    // left rafter
+    const rafterLen = Math.hypot(H.D/2, H.RIDGE);
+    const rL = new THREE.Mesh(new THREE.BoxGeometry(rafterLen, 0.06, 0.06), trussMat);
+    rL.position.set(-H.D/4, H.FOUND_H + H.WALL + H.RIDGE/2, 0);
+    rL.rotation.z = Math.atan2(H.RIDGE, H.D/2);
+    g.add(rL);
+    const rR = rL.clone();
+    rR.position.x = H.D/4;
+    rR.rotation.z = -Math.atan2(H.RIDGE, H.D/2);
+    g.add(rR);
+    // king post
+    const kp = new THREE.Mesh(new THREE.BoxGeometry(0.06, H.RIDGE, 0.06), trussMat);
+    kp.position.set(0, H.FOUND_H + H.WALL + H.RIDGE/2, 0);
+    g.add(kp);
+    g.position.z = z;
+    g.children.forEach(c => c.castShadow = true);
+    trussGroup.add(g);
   }
-  const topY = 0.25+h1;
-  beam(0.1,0.1,8-0.1,0.1,topY); beam(0.1,4.4,8-0.1,4.4,topY);
-  beam(0.1,0.1,0.1,4.4,topY); beam(8-0.1,0.1,8-0.1,4.4,topY);
-  beam(2.6,0.1,2.6,4.4,topY); beam(5.0,0.1,5.0,4.4,topY);
-  // 스팬덱 바닥
-  const deck = new THREE.Mesh(new THREE.BoxGeometry(M(8000)-0.1, 0.06, M(4500)-0.1), new THREE.MeshStandardMaterial({color:"#6a7280", roughness:0.6, metalness:0.3}));
-  deck.position.set(4, topY+0.03, 2.25); addToStage(H.steel, deck);
+  // purlins (longitudinal)
+  for (let i = 0; i < 4; i++) {
+    const t = i / 3; // 0..1
+    const side = (i % 2 === 0 ? -1 : 1);
+    const xi = side * (H.D/2) * (1 - t);
+    const yi = H.FOUND_H + H.WALL + H.RIDGE * t;
+    const purlin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, H.W + 0.2), M.steel);
+    purlin.position.set(xi, yi, 0);
+    trussGroup.add(purlin);
+  }
+  // ridge beam
+  const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, H.W + 0.3), M.steel);
+  ridge.position.set(0, H.FOUND_H + H.WALL + H.RIDGE, 0);
+  trussGroup.add(ridge);
 }
 
-/* 2층(다락) 골조 + 지붕 프레임 */
+// ---- Walls (solid), stage 3 (rising) and after ----
+const wallsGroup = new THREE.Group();
+houseGroup.add(wallsGroup);
 {
-  const h1=M(2300), h2=M(1800);
-  const colMat = new THREE.MeshStandardMaterial({color:"#2b3240", roughness:0.5, metalness:0.6});
-  const baseY = 0.25+h1;
-  const cols = [[0.1,0.1],[8-0.1,0.1],[0.1,4.4],[8-0.1,4.4],[5.0,0.1],[5.0,4.4]];
-  cols.forEach(([x,z])=>{
-    const c=new THREE.Mesh(new THREE.BoxGeometry(0.1,h2,0.1), colMat);
-    c.position.set(x, baseY+h2/2, z); addToStage(H.atticFrame, c);
-  });
-  // 다락 보
-  const topY = baseY+h2;
-  function beam2(x1,z1,x2,z2,y,mat=colMat){
-    const dx=x2-x1, dz=z2-z1, len=Math.hypot(dx,dz);
-    const b=new THREE.Mesh(new THREE.BoxGeometry(len,0.1,0.08), mat);
-    b.position.set((x1+x2)/2, y, (z1+z2)/2);
-    b.rotation.y = -Math.atan2(dz,dx);
-    addToStage(H.atticFrame, b);
-  }
-  beam2(0.1,0.1,8-0.1,0.1,topY); beam2(0.1,4.4,8-0.1,4.4,topY);
-  beam2(0.1,0.1,0.1,4.4,topY); beam2(8-0.1,0.1,8-0.1,4.4,topY);
-  beam2(5.0,0.1,5.0,4.4,topY);
+  // We make 4 walls as individual planes, with windows cut as separate meshes
+  // (simpler: just solid walls with window inserts in front)
+  // East wall (front facade) - with 2 windows + door
+  const eastWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, H.WALL, H.W), M.wallCream);
+  eastWall.position.set(H.D/2, H.FOUND_H + H.WALL/2, 0);
+  eastWall.castShadow = true; eastWall.receiveShadow = true;
+  wallsGroup.add(eastWall);
+  // West wall (back)
+  const westWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, H.WALL, H.W), M.wallSide);
+  westWall.position.set(-H.D/2, H.FOUND_H + H.WALL/2, 0);
+  westWall.castShadow = true; westWall.receiveShadow = true;
+  wallsGroup.add(westWall);
+  // North wall (gable side)
+  const northWall = new THREE.Mesh(new THREE.BoxGeometry(H.D, H.WALL, 0.1), M.wallSide);
+  northWall.position.set(0, H.FOUND_H + H.WALL/2, -H.W/2);
+  northWall.castShadow = true; northWall.receiveShadow = true;
+  wallsGroup.add(northWall);
+  // South wall (gable side)
+  const southWall = northWall.clone(); southWall.position.z = H.W/2; wallsGroup.add(southWall);
 
-  // 지붕 트러스 (박공, 박공 능선 Z 방향 중앙 2.25)
-  const ridgeY = topY+0.7;
-  const trussMat = new THREE.MeshStandardMaterial({color:"#4a3a2a", roughness:0.8});
-  const trussPositions = [0.2, 2.0, 4.0, 6.0, 7.8];
-  trussPositions.forEach(x=>{
-    // 2개 경사 서까래
-    const g1 = new THREE.Group();
-    const span = 4.5, half = span/2;
-    const rise = ridgeY - topY;
-    const legLen = Math.hypot(half, rise);
-    const leftM = new THREE.Mesh(new THREE.BoxGeometry(legLen, 0.08, 0.08), trussMat);
-    leftM.position.set(x, (topY+ridgeY)/2, 2.25-half/2);
-    leftM.rotation.z = 0;
-    leftM.rotation.x = Math.atan2(rise, -half);
-    H.roofFrame.add(leftM);
-    const rightM = leftM.clone();
-    rightM.position.set(x, (topY+ridgeY)/2, 2.25+half/2);
-    rightM.rotation.x = -Math.atan2(rise, half);
-    H.roofFrame.add(rightM);
-    // 수평 타이
-    const tie = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,span), trussMat);
-    tie.position.set(x, topY+0.04, 2.25); H.roofFrame.add(tie);
-  });
-  // 능선
-  const ridge = new THREE.Mesh(new THREE.BoxGeometry(M(8000)+0.4, 0.08, 0.08), trussMat);
-  ridge.position.set(4, ridgeY, 2.25); H.roofFrame.add(ridge);
-  // 중도리
-  for(const z of [1.0, 1.6, 2.9, 3.5]){
-    const p = new THREE.Mesh(new THREE.BoxGeometry(M(8000)+0.3, 0.06, 0.06), trussMat);
-    const t = Math.abs(z-2.25)/2.25;
-    p.position.set(4, topY + (1-t)*(ridgeY-topY)*0.5 + 0.1, z);
-    H.roofFrame.add(p);
+  // Gable triangles (both ends)
+  function gableTriangle(zPos) {
+    const shape = new THREE.Shape();
+    shape.moveTo(-H.D/2, 0);
+    shape.lineTo( H.D/2, 0);
+    shape.lineTo( 0, H.RIDGE);
+    shape.lineTo(-H.D/2, 0);
+    const g = new THREE.ExtrudeGeometry(shape, { depth: 0.1, bevelEnabled: false });
+    g.translate(0, 0, -0.05);
+    const m = new THREE.Mesh(g, M.wallSide);
+    m.position.set(0, H.FOUND_H + H.WALL, zPos);
+    m.castShadow = true; m.receiveShadow = true;
+    return m;
   }
-  H.roofFrame.children.forEach(m=>{m.castShadow=true; m.receiveShadow=true;});
+  wallsGroup.add(gableTriangle(-H.W/2));
+  wallsGroup.add(gableTriangle(H.W/2));
+
+  // ----- East facade features (door + windows) -----
+  // Door (center-ish, slightly south — matches entrance plan near kitchen/foyer)
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.0, 0.9), M.door);
+  door.position.set(H.D/2 + 0.03, H.FOUND_H + 1.0, 0.2);
+  wallsGroup.add(door);
+  // Left big window (거실)
+  const winL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.3, 2.2), M.window);
+  winL.position.set(H.D/2 + 0.04, H.FOUND_H + 1.2, -2.4);
+  wallsGroup.add(winL);
+  // Right window (방)
+  const winR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.1, 1.5), M.window);
+  winR.position.set(H.D/2 + 0.04, H.FOUND_H + 1.2, 2.5);
+  wallsGroup.add(winR);
+  // Small window above door
+  const winT = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.8), M.window);
+  winT.position.set(H.D/2 + 0.04, H.FOUND_H + 1.95, 0.2);
+  wallsGroup.add(winT);
+
+  // Rear door (west wall)
+  const rearDoor = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.9, 0.8), M.door);
+  rearDoor.position.set(-H.D/2 - 0.03, H.FOUND_H + 0.95, 1.0);
+  wallsGroup.add(rearDoor);
+
+  // North gable window (방)
+  const winN = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.06), M.window);
+  winN.position.set(0.6, H.FOUND_H + 1.5, H.W/2 + 0.04);
+  wallsGroup.add(winN);
+  // South gable window (거실)
+  const winS = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.9, 0.06), M.window);
+  winS.position.set(-0.3, H.FOUND_H + 1.5, -H.W/2 - 0.04);
+  wallsGroup.add(winS);
 }
 
-/* 외장 PIR 패널 + 창호 포함 벽 */
-function makeExtWalls(parent, floor, baseY, panel){
-  const F = DESIGN.floors[floor];
-  const h = M(F.height);
-  const matPanel = panel ? new THREE.MeshStandardMaterial({color:"#ebe6d8", roughness:0.85}) :
-                           new THREE.MeshStandardMaterial({color:"#d9d3c0", roughness:0.9, transparent:true, opacity:0.9});
-  const matInner = new THREE.MeshStandardMaterial({color:"#dcd4c0", roughness:0.95});
-  const matGlass = new THREE.MeshPhysicalMaterial({color:"#a8d0e8", transmission:0.8, roughness:0.1, transparent:true, opacity:0.55, metalness:0.1});
-  const matDoor = new THREE.MeshStandardMaterial({color:"#5a3f2a", roughness:0.6});
-  const matDoorBack = new THREE.MeshStandardMaterial({color:"#8a3a2a", roughness:0.6});
-  F.walls.forEach((w,i)=>{
-    const isOuter = i<4;
-    const mat = isOuter ? matPanel : matInner;
-    const openings = (F.openings||[]).filter(o=>o.wall===i);
-    const dx=w.b[0]-w.a[0], dy=w.b[1]-w.a[1], len=Math.hypot(dx,dy);
-    const ang=Math.atan2(dy,dx);
-    const g=new THREE.Group();
-    g.position.set(M(w.a[0]), baseY, M(w.a[1]));
-    g.rotation.y = -ang;
-    const T = 0.1;
-    let cursor=0;
-    const cuts = openings.map(o=>({s:o.pos,e:o.pos+o.w, sill:o.sill, h:o.h, type:o.type})).sort((a,b)=>a.s-b.s);
-    cuts.forEach(c=>{
-      if(c.s>cursor) addSeg(cursor, c.s, 0, h);
-      if(c.sill+M(c.h) < h) addSeg(c.s, c.e, c.sill/1000+c.h/1000, h-(c.sill+c.h)/1000);
-      if(c.sill>0) addSeg(c.s, c.e, 0, c.sill/1000);
-      // 창/문 패널
-      const pw = (c.e-c.s)/1000;
-      const panelMesh = new THREE.Mesh(new THREE.BoxGeometry(pw, c.h/1000, 0.04),
-        c.type==="win"? matGlass : c.type==="back"? matDoorBack : matDoor);
-      panelMesh.position.set((c.s+(c.e-c.s)/2)/1000, (c.sill+c.h/2)/1000, 0);
-      panelMesh.castShadow=false;
-      if(parent===H.windows) g.add(panelMesh);
-      cursor=c.e;
-    });
-    if(cursor<len) addSeg(cursor, len, 0, h);
-    function addSeg(s,e,yStart,yH){
-      if(parent===H.windows) return;
-      if(e-s<=0||yH<=0) return;
-      const m=new THREE.Mesh(new THREE.BoxGeometry((e-s)/1000, yH, T), mat);
-      m.position.set(((s+e)/2)/1000, yStart+yH/2, 0);
-      m.castShadow=true; m.receiveShadow=true;
-      g.add(m);
+// ---- Roof cladding (stage 5+) ----
+const roofGroup = new THREE.Group();
+houseGroup.add(roofGroup);
+{
+  const slopeLen = Math.hypot(H.D/2, H.RIDGE) + 0.3;
+  const roofW = H.W + 0.6; // overhang
+  const geo = new THREE.BoxGeometry(slopeLen, 0.08, roofW);
+  const left = new THREE.Mesh(geo, M.roof);
+  left.position.set(-H.D/4, H.FOUND_H + H.WALL + H.RIDGE/2, 0);
+  left.rotation.z = Math.atan2(H.RIDGE, H.D/2);
+  left.castShadow = true; left.receiveShadow = true;
+  roofGroup.add(left);
+  const right = new THREE.Mesh(geo, M.roof);
+  right.position.set(H.D/4, H.FOUND_H + H.WALL + H.RIDGE/2, 0);
+  right.rotation.z = -Math.atan2(H.RIDGE, H.D/2);
+  right.castShadow = true; right.receiveShadow = true;
+  roofGroup.add(right);
+  // ridge cap
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, roofW + 0.1), M.roofRidge);
+  cap.position.set(0, H.FOUND_H + H.WALL + H.RIDGE + 0.04, 0);
+  roofGroup.add(cap);
+  // gutter (east)
+  const gutter = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, roofW), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.6 }));
+  gutter.position.set(H.D/2 + 0.08, H.FOUND_H + H.WALL - 0.02, 0);
+  roofGroup.add(gutter);
+  const gutter2 = gutter.clone(); gutter2.position.x = -H.D/2 - 0.08; roofGroup.add(gutter2);
+  // downspout
+  const ds = new THREE.Mesh(new THREE.BoxGeometry(0.08, H.WALL + 0.5, 0.08), new THREE.MeshStandardMaterial({ color: 0x3a3a3a }));
+  ds.position.set(H.D/2 + 0.08, H.FOUND_H + H.WALL/2 - 0.2, H.W/2 - 0.2);
+  roofGroup.add(ds);
+}
+
+// ---- Attic addition (stage 6) - 2800 x 3100 to the right (north) side ----
+// According to plan: VOID left, 다락방 right. Attic sits inside the roof volume
+// but we also build the physical attic 3000x3300 addition dormer per spec.
+const atticGroup = new THREE.Group();
+houseGroup.add(atticGroup);
+{
+  // small boxy dormer/addition on north side (right side of building when facing east)
+  const aw = H.ATTIC_W; const ad = H.ATTIC_D; const ah = 2.3;
+  const addBody = new THREE.Mesh(new THREE.BoxGeometry(ad, ah, aw), M.wallCream);
+  addBody.position.set(-ad/2 + H.D/2 - 1.0, H.FOUND_H + H.WALL + ah/2 + 0.1, -H.W/2 - aw/2 + 0.1);
+  // actually: addition attached north face, projecting north
+  addBody.position.set(0.3, H.FOUND_H + H.WALL - 0.3 + ah/2, -H.W/2 - aw/2 + 0.3);
+  addBody.scale.set(ad / ad, 1, aw / aw);
+  addBody.castShadow = true; addBody.receiveShadow = true;
+  atticGroup.add(addBody);
+  // small gable roof over addition
+  const slopeLen = Math.hypot(ad/2, 0.9) + 0.15;
+  const r1 = new THREE.Mesh(new THREE.BoxGeometry(slopeLen, 0.06, aw + 0.3), M.roof);
+  r1.position.copy(addBody.position);
+  r1.position.y += ah/2 + 0.45;
+  r1.position.x -= ad/4;
+  r1.rotation.z = Math.atan2(0.9, ad/2);
+  atticGroup.add(r1);
+  const r2 = new THREE.Mesh(new THREE.BoxGeometry(slopeLen, 0.06, aw + 0.3), M.roof);
+  r2.position.copy(addBody.position);
+  r2.position.y += ah/2 + 0.45;
+  r2.position.x += ad/4;
+  r2.rotation.z = -Math.atan2(0.9, ad/2);
+  atticGroup.add(r2);
+  // attic window
+  const atWin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 1.3), M.window);
+  atWin.position.set(addBody.position.x + ad/2 + 0.03, addBody.position.y + 0.1, addBody.position.z);
+  atticGroup.add(atWin);
+}
+
+// ---------------------------------------------------------------------------
+// FENCE / low wall around property + landscaping (stage 6)
+// ---------------------------------------------------------------------------
+const fenceGroup = new THREE.Group();
+scene.add(fenceGroup);
+{
+  const brickMat = new THREE.MeshStandardMaterial({ color: 0xa15842, roughness: 0.95 });
+  const capMat = new THREE.MeshStandardMaterial({ color: 0xcccbc3, roughness: 0.9 });
+  const panelMat = new THREE.MeshStandardMaterial({ color: 0x3a4a52, roughness: 0.7, metalness: 0.3 });
+  const h = 1.5; // fence height 1500mm
+  const padHalfW = H.PAD_W/2 + 0.2;
+  const padHalfD = H.PAD_D/2 + 0.2;
+
+  function brickRun(x1, z1, x2, z2, hasGap=false) {
+    const len = Math.hypot(x2 - x1, z2 - z1);
+    const brickLen = 0.6;
+    const n = Math.floor(len / brickLen);
+    const dx = (x2 - x1) / n;
+    const dz = (z2 - z1) / n;
+    for (let i = 0; i < n; i++) {
+      if (hasGap && i >= n*0.4 && i <= n*0.55) continue; // gap for entry
+      const cx = x1 + dx * (i + 0.5);
+      const cz = z1 + dz * (i + 0.5);
+      // brick base
+      const base = new THREE.Mesh(new THREE.BoxGeometry(brickLen * 0.95, 0.8, 0.2), brickMat);
+      base.position.set(cx, 0.4, cz);
+      base.rotation.y = Math.atan2(dz, dx);
+      base.castShadow = true; base.receiveShadow = true;
+      fenceGroup.add(base);
+      // metal panel above
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(brickLen * 0.95, h - 0.9, 0.04), panelMat);
+      panel.position.set(cx, 0.4 + 0.4 + (h - 0.9)/2, cz);
+      panel.rotation.y = Math.atan2(dz, dx);
+      fenceGroup.add(panel);
+      // cap
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(brickLen, 0.06, 0.24), capMat);
+      cap.position.set(cx, 0.82, cz);
+      cap.rotation.y = Math.atan2(dz, dx);
+      fenceGroup.add(cap);
     }
-    parent.add(g);
+  }
+  // south edge (gap for entrance)
+  brickRun(-padHalfW, padHalfD, padHalfW, padHalfD, true);
+  // east edge
+  brickRun(padHalfW, padHalfD, padHalfW, -padHalfD);
+  // north edge
+  brickRun(padHalfW, -padHalfD, -padHalfW, -padHalfD);
+  // west edge
+  brickRun(-padHalfW, -padHalfD, -padHalfW, padHalfD);
+}
+
+// Landscaping groups
+const landscapeGroup = new THREE.Group();
+scene.add(landscapeGroup);
+
+// Yard treatment: concrete drive from entrance south, stepping stones to door, lawn elsewhere
+function buildYardTreatment() {
+  const grp = new THREE.Group();
+  // Concrete driveway strip from south entrance up to parking spot east of house
+  const drive = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 10), M.concreteD);
+  drive.rotation.x = -Math.PI/2;
+  drive.position.set(5.5, 0.02, 4.0);
+  drive.rotation.z = Math.PI/14;
+  drive.receiveShadow = true;
+  grp.add(drive);
+  // Parking pad
+  const park = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 3.0), M.concreteD);
+  park.rotation.x = -Math.PI/2;
+  park.position.set(5.5, 0.03, -1.0);
+  park.receiveShadow = true;
+  grp.add(park);
+  // Lawn (main yard area) — a soft green rectangle slightly raised
+  const lawn = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), M.grassL);
+  lawn.rotation.x = -Math.PI/2;
+  lawn.position.set(-1.5, 0.015, 2.5);
+  lawn.receiveShadow = true;
+  grp.add(lawn);
+  const lawn2 = new THREE.Mesh(new THREE.PlaneGeometry(16, 5.5), M.grassL);
+  lawn2.rotation.x = -Math.PI/2;
+  lawn2.position.set(-1.5, 0.015, -5.5);
+  lawn2.receiveShadow = true;
+  grp.add(lawn2);
+  // Stepping stones from drive to east door
+  for (let i = 0; i < 6; i++) {
+    const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.08, 10), M.stone);
+    stone.position.set(5.0 - i * 0.7, 0.05, 1.0 - i * 0.1);
+    grp.add(stone);
+  }
+  // Secondary path with stones from south entrance curving to monument side
+  for (let i = 0; i < 10; i++) {
+    const t = i / 9;
+    const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.06, 8), M.stone);
+    stone.position.set(THREE.MathUtils.lerp(1.0, -5.5, t), 0.04,
+                       THREE.MathUtils.lerp(8.0, 1.5, t) + Math.sin(t * Math.PI) * 1.0);
+    grp.add(stone);
+  }
+  return grp;
+}
+const yardTreatment = buildYardTreatment();
+landscapeGroup.add(yardTreatment);
+
+// Monument (비석) with two yew trees (주목)
+function buildMonument() {
+  const grp = new THREE.Group();
+  // base
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.2, 0.7), M.monument);
+  base.position.y = 0.1;
+  base.castShadow = true; base.receiveShadow = true;
+  grp.add(base);
+  // stele
+  const stele = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 0.18), M.monument);
+  stele.position.y = 0.8;
+  stele.castShadow = true;
+  grp.add(stele);
+  // top cap
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.25), M.monument);
+  cap.position.y = 1.45;
+  grp.add(cap);
+  // small stone-ring around base
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    const r = 0.9;
+    const s = new THREE.Mesh(new THREE.DodecahedronGeometry(0.18, 0), M.stone);
+    s.position.set(Math.cos(a) * r, 0.08, Math.sin(a) * r);
+    s.rotation.set(Math.random(), Math.random(), Math.random());
+    grp.add(s);
+  }
+  // Yew trees (주목) on both sides
+  function yew(x, z, s) {
+    const yg = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.6, 6), M.trunk);
+    trunk.position.y = 0.3;
+    yg.add(trunk);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.0, 7), M.yew);
+    cone.position.y = 1.0;
+    yg.add(cone);
+    const cone2 = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.6, 6), M.yew);
+    cone2.position.y = 1.6;
+    yg.add(cone2);
+    yg.position.set(x, 0, z);
+    yg.scale.setScalar(s);
+    yg.children.forEach(c => c.castShadow = true);
+    return yg;
+  }
+  grp.add(yew(-1.2, 0, 1.1));
+  grp.add(yew(1.2, 0, 1.0));
+  // Position: LEFT of building (building faces east, so left = north side)
+  grp.position.set(-H.D/2 - 2.0, 0, -H.W/2 + 1.5);
+  grp.rotation.y = 0.2;
+  return grp;
+}
+const monumentGroup = buildMonument();
+landscapeGroup.add(monumentGroup);
+
+// Perimeter trees: 산수유, 라일락, 비파나무, 무화과, 체리
+function buildPerimeterTrees() {
+  const grp = new THREE.Group();
+  const species = [
+    { name: '산수유', leaf: 0x6ba94d, h: 2.4, r: 0.9 },
+    { name: '라일락', leaf: 0x9ca7d8, h: 2.0, r: 0.8 },
+    { name: '비파나무', leaf: 0x4e8c3a, h: 2.6, r: 1.0 },
+    { name: '무화과', leaf: 0x55934a, h: 2.2, r: 1.1 },
+    { name: '체리', leaf: 0xd98fb0, h: 2.5, r: 0.95 },
+  ];
+  const positions = [];
+  const padHalfW = H.PAD_W/2 - 0.6;
+  const padHalfD = H.PAD_D/2 - 0.6;
+  // East perimeter inside fence
+  for (let i = 0; i < 5; i++) {
+    const z = -padHalfD + 1.5 + i * (padHalfD * 2 - 3.0) / 4;
+    positions.push([padHalfW - 1.2, z]);
+  }
+  // South perimeter
+  for (let i = 0; i < 4; i++) {
+    const x = -padHalfW + 2 + i * (padHalfW * 2 - 4) / 3;
+    if (Math.abs(x - 2.5) < 2) continue; // leave gate area open
+    positions.push([x, padHalfD - 1.2]);
+  }
+  // West perimeter
+  for (let i = 0; i < 3; i++) {
+    const z = -padHalfD + 3 + i * (padHalfD * 2 - 6) / 2;
+    positions.push([-padHalfW + 1.2, z]);
+  }
+  for (let i = 0; i < positions.length; i++) {
+    const sp = species[i % species.length];
+    const [x, z] = positions[i];
+    const tg = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, sp.h * 0.5, 6), M.trunk);
+    trunk.position.y = sp.h * 0.25;
+    tg.add(trunk);
+    const leafMat = new THREE.MeshStandardMaterial({ color: sp.leaf, roughness: 1 });
+    const canopy = new THREE.Mesh(new THREE.IcosahedronGeometry(sp.r, 0), leafMat);
+    canopy.position.y = sp.h * 0.6;
+    canopy.scale.y = 0.9;
+    tg.add(canopy);
+    const canopy2 = new THREE.Mesh(new THREE.IcosahedronGeometry(sp.r * 0.7, 0), leafMat);
+    canopy2.position.set(sp.r * 0.3, sp.h * 0.85, 0);
+    tg.add(canopy2);
+    tg.position.set(x, 0, z);
+    tg.rotation.y = Math.random() * Math.PI * 2;
+    tg.children.forEach(c => c.castShadow = true);
+    tg.userData.species = sp.name;
+    grp.add(tg);
+  }
+  return grp;
+}
+landscapeGroup.add(buildPerimeterTrees());
+
+// Green tea hedge along north edge
+function buildTeaHedge() {
+  const grp = new THREE.Group();
+  const padHalfW = H.PAD_W/2 - 0.8;
+  const n = 24;
+  for (let i = 0; i < n; i++) {
+    const x = -padHalfW + i * (padHalfW * 2 / (n - 1));
+    const bush = new THREE.Mesh(new THREE.SphereGeometry(0.5, 7, 6), M.tea);
+    bush.position.set(x, 0.4, -H.PAD_D/2 + 1.2);
+    bush.scale.set(1.1, 0.7, 1.1);
+    bush.castShadow = true;
+    grp.add(bush);
+  }
+  return grp;
+}
+landscapeGroup.add(buildTeaHedge());
+
+// ---------------------------------------------------------------------------
+// STAGE CONTROL
+// ---------------------------------------------------------------------------
+const STAGES = [
+  { name: '빈 대지', desc: '성토 패드와 블록 옹벽만 있는 상태. 남쪽 곡선로가 패드 가장자리를 지난다.' },
+  { name: '기초 형틀·철근', desc: '기초 거푸집(형틀)과 철근 배근, 오·배수 입상관 설치. 현재 사진과 일치하는 단계.' },
+  { name: '콘크리트 타설 (스팬덱 + 75t RC)', desc: '스팬덱 데크 위 75t 레미콘을 타설. 거푸집을 채우며 기초 슬래브가 올라간다.' },
+  { name: '벽체 상승 (경량 철골)', desc: 'C형강 기둥·보 조립과 벽체 상승. 사진 17-21의 다락 골조 단계에 해당.' },
+  { name: '지붕 프레임 (트러스)', desc: '지붕 트러스·중도리·종도리까지 조립 완료. 박공 1800mm.' },
+  { name: '지붕 크래딩·외장', desc: '지붕 금속 패널 시공과 외벽 PIR 샌드위치 패널 마감. 처마·물받이 설치.' },
+  { name: '창호·마감 + 다락 2800×3100 + 조경', desc: '창호·문·설비 완공과 다락방 증축, 비석·주목·수목·녹차 생울타리, 콘크리트 진입로/디딤돌 조경 마감.' },
+];
+
+// For animation
+let stageVal = 1; // continuous
+let targetStage = 1;
+
+function applyStage(s) {
+  // s in [0, 6]
+  const i = Math.floor(s);
+  const f = s - i;
+
+  // Formwork/rebar: visible at stage 1, fading out at stage 2 as concrete fills
+  const showForm = (s >= 0.6 && s < 2.0);
+  formworkGroup.visible = showForm;
+  dirtPit.visible = s >= 0.3 && s < 2.0;
+
+  // Slab (concrete) rises during stage 2
+  if (s < 1.5) {
+    slab.visible = false;
+  } else if (s < 2.5) {
+    slab.visible = true;
+    const t = Math.min(1, Math.max(0, (s - 1.5))); // 1.5..2.5 → 0..1
+    slab.scale.y = Math.max(0.001, t);
+    slab.position.y = (H.FOUND_H * t)/2;
+    // When fully poured, hide formwork
+    if (t > 0.95) formworkGroup.visible = false;
+  } else {
+    slab.visible = true;
+    slab.scale.y = 1;
+    slab.position.y = H.FOUND_H/2;
+  }
+
+  // Walls/frame: rise during stage 3
+  const frameT = THREE.MathUtils.clamp((s - 2.6) / 0.6, 0, 1);
+  frameGroup.visible = s >= 2.6;
+  frameGroup.scale.y = Math.max(0.001, frameT);
+  frameGroup.position.y = 0;
+
+  // Wall solids appear in stage 5 (cladding), partially during stage 3 end
+  const wallT = THREE.MathUtils.clamp((s - 2.9) / 0.6, 0, 1);
+  wallsGroup.visible = s >= 2.9;
+  wallsGroup.scale.y = Math.max(0.001, wallT);
+  wallsGroup.position.y = 0;
+  // Window materials dim before cladding stage
+  const facadeReady = s >= 5.0;
+  wallsGroup.children.forEach(c => {
+    if (c.material === M.window || c.material === M.door) {
+      // keep visible when walls visible
+      c.visible = wallT > 0.3;
+    }
+  });
+
+  // Trusses rise during stage 4
+  const trussT = THREE.MathUtils.clamp((s - 3.8) / 0.6, 0, 1);
+  trussGroup.visible = s >= 3.8;
+  trussGroup.scale.y = Math.max(0.001, trussT);
+  // Roof cladding stage 5
+  const roofT = THREE.MathUtils.clamp((s - 4.8) / 0.4, 0, 1);
+  roofGroup.visible = s >= 4.8;
+  roofGroup.scale.setScalar(THREE.MathUtils.lerp(0.9, 1, roofT));
+  roofGroup.children.forEach(c => c.visible = true);
+  roofGroup.traverse(o => { if (o.material) o.material.transparent = roofT < 1; if (o.material) o.material.opacity = roofT; });
+
+  // Attic (stage 6)
+  const atticT = THREE.MathUtils.clamp((s - 5.6) / 0.4, 0, 1);
+  atticGroup.visible = s >= 5.6;
+  atticGroup.scale.y = Math.max(0.001, atticT);
+
+  // Landscaping (stage 6)
+  const landT = THREE.MathUtils.clamp((s - 5.7) / 0.3, 0, 1);
+  landscapeGroup.visible = s >= 5.7;
+  landscapeGroup.traverse(o => {
+    if (o.material && o.material.transparent !== undefined) {
+      o.material.transparent = landT < 1;
+      o.material.opacity = landT;
+    }
+  });
+  fenceGroup.visible = s >= 5.7;
+  fenceGroup.traverse(o => {
+    if (o.material) {
+      o.material.transparent = landT < 1;
+      o.material.opacity = landT;
+    }
+  });
+
+  // Yard note visibility
+  document.getElementById('yard-note').style.display = (s >= 5.7) ? 'block' : 'none';
+
+  // Update UI text
+  const idx = Math.min(6, Math.max(0, Math.round(s)));
+  const st = STAGES[idx];
+  document.getElementById('stage-name').textContent = st.name;
+  document.getElementById('stage-desc').textContent = st.desc;
+  document.getElementById('stage-title-big').textContent = st.name;
+  document.getElementById('stage-sub').textContent = st.desc;
+  document.getElementById('stage-title').querySelector('.idx').textContent = String(idx).padStart(2, '0');
+  document.getElementById('stage-prog').textContent = s.toFixed(2) + ' / 6';
+  // highlight active button
+  document.querySelectorAll('.stage-btn').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.stage) === idx);
   });
 }
 
-makeExtWalls(H.cladding, 1, 0.25, true);
-makeExtWalls(H.cladding, 2, 0.25+M(2300), true);
-makeExtWalls(H.windows, 1, 0.25, true);
-makeExtWalls(H.windows, 2, 0.25+M(2300), true);
-
-/* 지붕 마감 */
-{
-  const h1=M(2300), h2=M(1800);
-  const topY = 0.25+h1+h2;
-  const ridgeY = topY+0.7;
-  const shingleMat = new THREE.MeshStandardMaterial({color:"#3b3a35", roughness:0.75});
-  function panel(xs,zs,ys){
-    const g=new THREE.BufferGeometry();
-    const v=new Float32Array([
-      xs[0],ys[0],zs[0], xs[1],ys[1],zs[1], xs[2],ys[2],zs[2],
-      xs[0],ys[0],zs[0], xs[2],ys[2],zs[2], xs[3],ys[3],zs[3]]);
-    g.setAttribute("position", new THREE.BufferAttribute(v,3));
-    g.computeVertexNormals();
-    const m=new THREE.Mesh(g, shingleMat);
-    m.castShadow=true; m.receiveShadow=true;
-    m.userData.isRoof=true; return m;
-  }
-  const over=0.4;
-  const w=M(8000), d=M(4500);
-  const r1=panel([-over,w+over,w+over,-over],[-over,-over,d/2,d/2],[topY,topY,ridgeY,ridgeY]);
-  const r2=panel([-over,w+over,w+over,-over],[d/2,d/2,d+over,d+over],[ridgeY,ridgeY,topY,topY]);
-  H.roofFinish.add(r1); H.roofFinish.add(r2);
-}
-
-/* ============= 조경 (단계 6에서 표시) ============= */
-const landscape = new THREE.Group(); scene.add(landscape);
-
-// 비석 (건물 좌측 = 북쪽 측면, references '건물-비석' 위치관계 기준: 건물 좌측에 세움)
-{
-  const g=new THREE.Group();
-  const base=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.2,0.6), new THREE.MeshStandardMaterial({color:"#5a564e",roughness:1}));
-  base.position.y=0.1; g.add(base);
-  const stele=new THREE.Mesh(new THREE.BoxGeometry(0.5,1.2,0.18), new THREE.MeshStandardMaterial({color:"#8a8578",roughness:0.9}));
-  stele.position.y=0.8; g.add(stele);
-  const cap=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.12,0.22), new THREE.MeshStandardMaterial({color:"#7a766c",roughness:0.9}));
-  cap.position.y=1.46; g.add(cap);
-  g.position.set(-2, 0, 2.25);
-  g.children.forEach(m=>{m.castShadow=true; m.receiveShadow=true;});
-  landscape.add(g);
-  // 양쪽 주목
-  function yew(x,z){
-    const t=new THREE.Mesh(new THREE.ConeGeometry(0.4,1.1,8), new THREE.MeshStandardMaterial({color:"#2a4a2a",roughness:1,flatShading:true}));
-    t.position.set(x,0.55,z); t.castShadow=true; landscape.add(t);
-  }
-  yew(-2.6, 2.25-0.8); yew(-2.6, 2.25+0.8);
-}
-
-// 담장 (팬츠+벽돌 혼합) — 패드 외곽
-function fenceSegment(x1,z1,x2,z2){
-  const dx=x2-x1, dz=z2-z1, len=Math.hypot(dx,dz);
-  const g = new THREE.Group();
-  // 하단 벽돌
-  const base = new THREE.Mesh(new THREE.BoxGeometry(len, 0.4, 0.15), new THREE.MeshStandardMaterial({color:"#a07050", roughness:0.9}));
-  base.position.y=0.2; g.add(base);
-  // 상단 팬츠 (수직 바)
-  const pcount = Math.floor(len/0.15);
-  for(let i=0;i<pcount;i++){
-    const p = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.8, 0.06), new THREE.MeshStandardMaterial({color:"#4a4440",roughness:0.8}));
-    p.position.set(-len/2+0.075+i*0.15, 0.4+0.4, 0);
-    g.add(p);
-  }
-  // 상부 가로재
-  const top = new THREE.Mesh(new THREE.BoxGeometry(len,0.06,0.1), new THREE.MeshStandardMaterial({color:"#3a3634",roughness:0.8}));
-  top.position.y=1.17; g.add(top);
-  g.position.set((x1+x2)/2, 0, (z1+z2)/2);
-  g.rotation.y = -Math.atan2(z2-z1, x2-x1);
-  g.children.forEach(m=>{m.castShadow=true; m.receiveShadow=true;});
-  landscape.add(g);
-}
-const PAD_BOUND = [[-9,-8],[18,-8],[18,13],[-9,13]];
-for(let i=0;i<PAD_BOUND.length;i++){
-  const a=PAD_BOUND[i], b=PAD_BOUND[(i+1)%PAD_BOUND.length];
-  // 북쪽은 녹차나무 라인으로 대체
-  if(i===3) continue;
-  fenceSegment(a[0], a[1], b[0], b[1]);
-}
-
-// 북쪽 녹차나무 라인
-for(let x=-9;x<=18;x+=0.7){
-  const b = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), new THREE.MeshStandardMaterial({color:"#3a6a3a", roughness:1, flatShading:true}));
-  b.position.set(x, 0.3, 13); b.castShadow=true; b.receiveShadow=true; landscape.add(b);
-}
-
-// 담장 주변 수목: 산수유/라일락/비파/무화과/체리 — 섞어서 배치
-function tree(x,z,hue, size=1){
-  const t=new THREE.Group();
-  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.08*size,0.1*size,1.2*size,8), new THREE.MeshStandardMaterial({color:"#5a3a20",roughness:1}));
-  trunk.position.y=0.6*size; t.add(trunk);
-  const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(0.7*size, 0), new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(hue, 0.5, 0.38),roughness:1,flatShading:true}));
-  crown.position.y=1.3*size; t.add(crown);
-  t.position.set(x,0,z);
-  t.children.forEach(m=>{m.castShadow=true; m.receiveShadow=true;});
-  landscape.add(t); return t;
-}
-// 산수유(노랑기), 라일락(보라), 비파(연두), 무화과(짙은녹), 체리(분홍기)
-const plant = [
-  // 남측 담장 안쪽
-  [-7,-6,0.15],[-3,-6,0.78],[0,-6,0.3],[4,-6,0.95],[9,-6,0.15],[14,-6,0.3],
-  // 동측
-  [17,-4,0.78],[17,0,0.3],[17,4,0.15],[17,8,0.95],
-  // 서측
-  [-8,-3,0.3],[-8,3,0.78],[-8,8,0.15],
-];
-plant.forEach(([x,z,h])=>tree(x,z,h,0.9+Math.random()*0.4));
-
-/* 마당 처리 — 돌판 사이 잔디 (제안): 건물 전방(동쪽) 진입 영역 포설 */
-{
-  // 잔디 베이스
-  const grass = new THREE.Mesh(new THREE.CircleGeometry(13, 32), new THREE.MeshStandardMaterial({color:"#4a6a3a", roughness:1}));
-  grass.rotation.x=-Math.PI/2; grass.position.set(4, 0.21, 2.25); grass.receiveShadow=true; landscape.add(grass);
-  // 디딤돌 (현관→진입로)
-  const stoneMat = new THREE.MeshStandardMaterial({color:"#a5a098", roughness:0.9});
-  for(let i=0;i<6;i++){
-    const s = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.5), stoneMat);
-    s.position.set(8+0.5+i*0.9, 0.23, 2.25 + Math.sin(i*0.6)*0.3);
-    s.rotation.y = (Math.random()-.5)*0.2;
-    s.receiveShadow=true; landscape.add(s);
-  }
-  // 측면 디딤돌 (비석까지)
-  for(let i=0;i<4;i++){
-    const s = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.5), stoneMat);
-    s.position.set(-0.5-i*0.5, 0.23, 2.25);
-    s.receiveShadow=true; landscape.add(s);
-  }
-}
-
-/* 가구 (단계 6에서 투시) */
-const furnGroup = new THREE.Group(); H.interior.add(furnGroup);
-
-/* ============= 단계 전환 로직 ============= */
-let currentFloat = 2.9;   // 사진 17~34 상태 (단계 4 기준) 초깃값 — 완공 미리 보여주는 대신 실제 현재
-function setStage(f){
-  currentFloat = f;
-  const k = Math.max(0,Math.min(6,f));
-  // group visibility & scale progression
-  // 0: empty pad
-  // 1: base formwork + rebar
-  // 2: concrete slab (rebar fades)
-  // 3: steel 1F frame rises
-  // 4: attic + roof frame
-  // 5: cladding + roof finish
-  // 6: windows + landscape + furniture
-
-  H.base.visible = k >= 0.5 && k < 2.3;
-  H.rebar.visible = k >= 0.7 && k < 2.3;
-  H.slab.visible = k >= 1.8;
-
-  // steel 1F
-  const steelT = THREE.MathUtils.clamp((k-2.5)/1.0, 0, 1);
-  H.steel.visible = k >= 2.5;
-  H.steel.scale.y = steelT;
-  // attic frame
-  const atticT = THREE.MathUtils.clamp((k-3.5)/0.9, 0, 1);
-  H.atticFrame.visible = k >= 3.5;
-  H.atticFrame.scale.y = atticT;
-  const roofT = THREE.MathUtils.clamp((k-3.8)/0.9, 0, 1);
-  H.roofFrame.visible = k >= 3.7;
-  H.roofFrame.scale.y = Math.max(0.01,roofT);
-  H.roofFrame.position.y = (1-roofT)*0.3;
-
-  // cladding
-  const cladT = THREE.MathUtils.clamp((k-4.5)/0.9, 0, 1);
-  H.cladding.visible = k >= 4.5;
-  H.cladding.traverse(m=>{ if(m.material){ m.material.transparent = cladT<1; m.material.opacity = cladT; }});
-  H.roofFinish.visible = k >= 4.8;
-  H.roofFinish.traverse(m=>{ if(m.material){ m.material.transparent = true; m.material.opacity = THREE.MathUtils.clamp((k-4.8)/0.6,0,1); }});
-
-  // windows & doors
-  H.windows.visible = k >= 5.3;
-  H.windows.traverse(m=>{ if(m.material && !m.material.transmission){ m.material.transparent=true; m.material.opacity=THREE.MathUtils.clamp((k-5.3)/0.5,0,1);}});
-  // landscape
-  const landT = THREE.MathUtils.clamp((k-5.5)/1.2, 0, 1);
-  landscape.visible = k >= 5.5;
-  landscape.scale.set(landT*0.3+0.7, landT, landT*0.3+0.7);
-
-  // Panel
-  const idx = Math.min(6, Math.round(k));
-  const s = STAGES[idx];
-  document.getElementById("stepNum").textContent = s.k;
-  document.getElementById("stepTtl").textContent = s.name;
-  document.getElementById("stepDesc").textContent = s.desc;
-  document.getElementById("stepMeta").textContent = `${k.toFixed(1)} / 6`;
-  document.querySelectorAll(".step-dots button").forEach(b=> b.classList.toggle("on", parseInt(b.dataset.s)===idx));
-  document.getElementById("stepRange").value = f;
-}
-
-/* step dots */
-const dotsDiv = document.getElementById("stepDots");
-STAGES.forEach(s=>{
-  const b=document.createElement("button"); b.textContent=s.k; b.dataset.s=s.k;
-  b.onclick=()=>setStage(s.k);
-  dotsDiv.appendChild(b);
+// Build stage buttons
+const btnWrap = document.getElementById('stage-buttons');
+STAGES.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.className = 'stage-btn';
+  b.dataset.stage = i;
+  b.textContent = `${i}. ${s.name.split(' ')[0]}`;
+  b.title = s.name;
+  b.addEventListener('click', () => {
+    targetStage = i;
+  });
+  btnWrap.appendChild(b);
 });
-document.getElementById("stepRange").oninput = e=> setStage(parseFloat(e.target.value));
 
-/* 카메라 모드 */
-let fpControls = new PointerLockControls(camera, canvas);
-let mode="orbit";
-const keyState={};
-document.querySelectorAll("#cam-seg button").forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll("#cam-seg button").forEach(x=>x.classList.remove("on")); b.classList.add("on");
-    mode = b.dataset.cam;
-    if(mode==="orbit"){ orbit.enabled=true; fpControls.unlock(); camera.position.set(16,11,16); orbit.target.set(4,1.5,2.25); }
-    else { orbit.enabled=false; camera.position.set(4,1.6,-4); camera.lookAt(4,1.6,2.25); }
-  };
+const stageSlider = document.getElementById('stage-slider');
+stageSlider.addEventListener('input', () => {
+  stageVal = Number(stageSlider.value);
+  targetStage = stageVal;
+  applyStage(stageVal);
+  // if slider is used, exit cinema
+  cinema = false; refreshCinemaBtn();
 });
-canvas.addEventListener("click", ()=>{ if(mode==="fp") fpControls.lock(); });
-window.addEventListener("keydown", e=>keyState[e.code]=true);
-window.addEventListener("keyup", e=>keyState[e.code]=false);
 
-/* 시네마틱 */
-let cinema=false, cinemaT=0;
-document.getElementById("cinema").onclick=e=>{
-  cinema=!cinema; e.target.classList.toggle("on", cinema);
-  e.target.textContent = cinema? "순항 중단" : "시네마틱 자동 순항";
-  if(cinema){ mode="orbit"; orbit.enabled=false; document.querySelector("#cam-seg button[data-cam=orbit]").click(); orbit.enabled=false; }
-};
+// ---------------------------------------------------------------------------
+// CAMERA MODES
+// ---------------------------------------------------------------------------
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.target.set(0, 2, 0);
+orbit.enableDamping = true;
+orbit.dampingFactor = 0.08;
+orbit.minDistance = 6;
+orbit.maxDistance = 90;
+orbit.maxPolarAngle = Math.PI / 2.05;
+orbit.enablePan = true;
 
-/* 태양/색온도/안개/지붕투명/조경밀도 */
-function sunUpdate(){
-  const a=parseFloat(document.getElementById("sun").value)*Math.PI/180;
-  const r=35;
-  sun.position.set(Math.cos(a)*r+4, Math.sin(a)*r+4, Math.sin(a*0.7)*r+2);
-  sun.target.position.set(4,0,2.25);
-  const warm = parseFloat(document.getElementById("warm").value)/100;
-  const col = new THREE.Color().lerpColors(new THREE.Color("#cfe2ff"), new THREE.Color("#ffb060"), warm);
-  sun.color.copy(col);
-  renderer.toneMappingExposure = 0.9 + warm*0.4;
-  // sky bottom
-  sky.material.uniforms.bot.value.setHSL(0.07+warm*0.03, 0.6, 0.6-warm*0.15);
-  sky.material.uniforms.top.value.setHSL(0.6-warm*0.1, 0.4, 0.4-warm*0.1);
+const fpControls = new PointerLockControls(camera, renderer.domElement);
+scene.add(fpControls.getObject());
+fpControls.getObject().position.set(10, 2.5, 10);
+let fpMode = false;
+const keys = {};
+let fpVel = new THREE.Vector3();
+
+document.addEventListener('keydown', (e) => { keys[e.code] = true;
+  if (e.code === 'KeyV') { setFpMode(false); setCinema(false); }
+  if (e.code === 'KeyF') { setFpMode(!fpMode); }
+  if (e.code === 'KeyC') { setCinema(!cinema); }
+});
+document.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+const fpHint = document.getElementById('fp-hint');
+function setFpMode(on) {
+  fpMode = on;
+  if (on) {
+    orbit.enabled = false;
+    fpHint.style.display = 'block';
+    const onLock = () => { fpHint.style.display = 'none'; };
+    const onUnlock = () => { fpMode = false; orbit.enabled = true; refreshFpBtn(); fpHint.style.display = 'none'; };
+    fpControls.addEventListener('lock', onLock);
+    fpControls.addEventListener('unlock', onUnlock);
+    const onClick = () => { fpControls.lock(); container.removeEventListener('click', onClick); };
+    container.addEventListener('click', onClick);
+  } else {
+    orbit.enabled = true;
+    if (fpControls.isLocked) fpControls.unlock();
+    fpHint.style.display = 'none';
+  }
+  refreshFpBtn();
 }
-document.getElementById("sun").oninput=sunUpdate;
-document.getElementById("warm").oninput=sunUpdate;
-sunUpdate();
-document.getElementById("fog").oninput=e=>{
-  const v=parseFloat(e.target.value)/100;
-  scene.fog.near = 20+v*20;
-  scene.fog.far = 220 - v*120;
-};
-document.getElementById("rof").oninput=e=>{
-  const op=parseFloat(e.target.value)/100;
-  H.roofFinish.traverse(m=>{ if(m.material){ m.material.transparent=op<1; m.material.opacity=op; }});
-};
-document.getElementById("land").oninput=e=>{
-  const v=parseFloat(e.target.value)/100;
-  landscape.scale.set(0.7+v*0.3, v, 0.7+v*0.3);
-};
-
-/* 리사이즈 */
-function resize(){
-  const r=canvas.getBoundingClientRect();
-  renderer.setSize(r.width, r.height, false);
-  camera.aspect=r.width/r.height; camera.updateProjectionMatrix();
+function refreshFpBtn() {
+  document.getElementById('btn-fp').classList.toggle('on', fpMode);
+  document.getElementById('btn-view').classList.toggle('on', !fpMode && !cinema);
 }
-new ResizeObserver(resize).observe(canvas);
-resize();
 
-/* 애니메이션 */
-const clock=new THREE.Clock();
-function animate(){
-  requestAnimationFrame(animate);
-  const dt=clock.getDelta();
+// Cinema mode: orbit camera + auto advance stages
+let cinema = false;
+let cinemaAngle = 0;
+let cinemaStageTimer = 0;
+function setCinema(on) {
+  cinema = on;
+  if (on) setFpMode(false);
+  refreshCinemaBtn();
+  refreshFpBtn();
+}
+function refreshCinemaBtn() {
+  document.getElementById('btn-cinema').classList.toggle('on', cinema);
+}
+document.getElementById('btn-view').addEventListener('click', () => { setFpMode(false); setCinema(false); });
+document.getElementById('btn-fp').addEventListener('click', () => { setFpMode(!fpMode); });
+document.getElementById('btn-cinema').addEventListener('click', () => { setCinema(!cinema); });
 
-  if(cinema){
-    cinemaT += dt;
-    const stage = (cinemaT*0.15) % 7; // 0~6 반복
-    setStage(stage);
-    const a = cinemaT*0.1;
-    camera.position.set(4+Math.cos(a)*18, 7+Math.sin(a*0.7)*3, 2.25+Math.sin(a)*18);
-    camera.lookAt(4,1.5,2.25);
-  } else if(mode==="fp" && fpControls.isLocked){
-    const sp = (keyState["ShiftLeft"]||keyState["ShiftRight"])? 6 : 3;
-    const d = sp*dt;
-    if(keyState["KeyW"]||keyState["ArrowUp"]) fpControls.moveForward(d);
-    if(keyState["KeyS"]||keyState["ArrowDown"]) fpControls.moveForward(-d);
-    if(keyState["KeyA"]||keyState["ArrowLeft"]) fpControls.moveRight(-d);
-    if(keyState["KeyD"]||keyState["ArrowRight"]) fpControls.moveRight(d);
-    camera.position.y = Math.max(0.3, camera.position.y);
-  } else if(orbit.enabled){
-    orbit.update();
+// ---------------------------------------------------------------------------
+// Time slider
+// ---------------------------------------------------------------------------
+const timeSlider = document.getElementById('time-slider');
+const timeVal = document.getElementById('time-val');
+function fmtTime(h) {
+  const hh = Math.floor(h);
+  const mm = Math.round((h - hh) * 60);
+  return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+function updateTime(h) {
+  timeVal.textContent = fmtTime(h);
+  setSunByHour(h);
+}
+timeSlider.addEventListener('input', () => updateTime(Number(timeSlider.value)));
+document.querySelectorAll('[data-time]').forEach(b => {
+  b.addEventListener('click', () => {
+    timeSlider.value = b.dataset.time;
+    updateTime(Number(b.dataset.time));
+  });
+});
+updateTime(13);
+
+// Shadow toggle
+document.getElementById('btn-shadows').addEventListener('click', (e) => {
+  const on = !renderer.shadowMap.enabled;
+  renderer.shadowMap.enabled = on;
+  sunLight.castShadow = on;
+  scene.traverse(o => { if (o.isMesh) { o.castShadow = on && !!o.castShadow || on; o.material.needsUpdate = true; } });
+  e.currentTarget.classList.toggle('on', on);
+});
+
+// Trees/paddies toggle
+document.getElementById('btn-trees').addEventListener('click', (e) => {
+  paddiesGrp.visible = !paddiesGrp.visible;
+  e.currentTarget.classList.toggle('on', paddiesGrp.visible);
+});
+
+// Grid overlay toggle
+const grid = new THREE.GridHelper(60, 60, 0x4477aa, 0x224466);
+grid.position.y = 0.02;
+grid.visible = false;
+scene.add(grid);
+document.getElementById('btn-grid').addEventListener('click', (e) => {
+  grid.visible = !grid.visible;
+  e.currentTarget.classList.toggle('on', grid.visible);
+});
+
+// ---------------------------------------------------------------------------
+// Animate
+// ---------------------------------------------------------------------------
+const clock = new THREE.Clock();
+function animate() {
+  const dt = Math.min(0.1, clock.getDelta());
+
+  // smooth stage interp towards targetStage (unless cinema)
+  if (!cinema) {
+    stageVal += (targetStage - stageVal) * Math.min(1, dt * 3.0);
+    if (Math.abs(stageVal - targetStage) < 0.001) stageVal = targetStage;
+    stageSlider.value = stageVal.toFixed(3);
+    applyStage(stageVal);
   }
 
+  // cinema mode: orbit camera, auto-advance stage
+  if (cinema) {
+    cinemaAngle += dt * 0.15;
+    const r = 24;
+    const y = 10 + Math.sin(cinemaAngle * 0.6) * 3;
+    camera.position.set(Math.cos(cinemaAngle) * r, y, Math.sin(cinemaAngle) * r);
+    camera.lookAt(0, 2.5, 0);
+    cinemaStageTimer += dt;
+    if (cinemaStageTimer > 3.5) {
+      cinemaStageTimer = 0;
+      targetStage = (Math.round(stageVal) + 1) % 7;
+    }
+    stageVal += (targetStage - stageVal) * Math.min(1, dt * 1.5);
+    stageSlider.value = stageVal.toFixed(3);
+    applyStage(stageVal);
+  }
+
+  // first-person movement
+  if (fpMode && fpControls.isLocked) {
+    const speed = (keys.ShiftLeft || keys.ShiftRight) ? 7 : 3.5;
+    const fwd = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0);
+    const strafe = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+    fpVel.set(strafe, 0, -fwd).normalize().multiplyScalar(speed * dt);
+    fpControls.moveRight(fpVel.x);
+    fpControls.moveForward(-fpVel.z);
+    // keep y above pad
+    const o = fpControls.getObject();
+    const t = terrainHeightAt(o.position.x, o.position.z);
+    const padInside = Math.abs(o.position.x) < H.PAD_W/2 && Math.abs(o.position.z) < H.PAD_D/2;
+    const minY = (padInside ? 0 : t) + 1.65;
+    o.position.y += (minY - o.position.y) * Math.min(1, dt * 10);
+  }
+
+  orbit.update();
   renderer.render(scene, camera);
+  requestAnimationFrame(animate);
 }
-setStage(2.9);
+
+// Initial stage
+applyStage(1);
+targetStage = 1;
+refreshFpBtn();
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Hide loader
+setTimeout(() => {
+  document.getElementById('loading').classList.add('hide');
+  setTimeout(() => document.getElementById('loading').remove(), 700);
+}, 400);
+
 animate();
 </script>
 </body>
